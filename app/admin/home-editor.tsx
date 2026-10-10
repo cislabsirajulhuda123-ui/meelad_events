@@ -66,12 +66,28 @@ export default function HomeEditor({
   const [selected, setSelected] = useState("");
   useEffect(() => {
     const receive = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) return;
       if (
-        event.origin === window.location.origin &&
         event.data?.type === "home-visual-edit" &&
         typeof event.data.key === "string"
-      )
+      ) {
         setSelected(event.data.key);
+      }
+      if (
+        event.data?.type === "home-visual-position" &&
+        typeof event.data.key === "string" &&
+        Number.isFinite(event.data.x) &&
+        Number.isFinite(event.data.y)
+      ) {
+        change((d) => ({
+          ...d,
+          content: {
+            ...d.content,
+            [`position-x:${event.data.key}`]: String(event.data.x),
+            [`position-y:${event.data.key}`]: String(event.data.y),
+          },
+        }));
+      }
     };
     window.addEventListener("message", receive);
     return () => window.removeEventListener("message", receive);
@@ -84,6 +100,26 @@ export default function HomeEditor({
       delete content[key];
       return { ...d, content };
     });
+  const addNewText = () => {
+    const id = `custom-text:${Date.now()}`;
+    change((d) => {
+      let ids: string[] = [];
+      try {
+        ids = JSON.parse(d.content["custom-home-text-ids"] || "[]");
+      } catch {}
+      return {
+        ...d,
+        content: {
+          ...d.content,
+          "custom-home-text-ids": JSON.stringify([...ids, id]),
+          [id]: "NEW TEXT",
+          [`position-x:${id}`]: "20",
+          [`position-y:${id}`]: "140",
+        },
+      };
+    });
+    setSelected(id);
+  };
   return (
     <section className="card admin-section">
       <h2>Home page editor</h2>
@@ -93,7 +129,12 @@ export default function HomeEditor({
         finished.
       </p>
       <h3>Visual home editor</h3>
-      <p>Preview-ൽ മാറ്റേണ്ട text അല്ലെങ്കിൽ image click ചെയ്യുക.</p>
+      <p>Text പിടിച്ച് drag ചെയ്യുക. Edit ചെയ്യാൻ text click ചെയ്യുക.</p>
+      <div className="button-row">
+        <button type="button" className="btn small" onClick={addNewText}>
+          + Add new text
+        </button>
+      </div>
       <div className="visual-home-editor">
         <iframe title="Home page visual editor" src="/?visualEdit=1" />
       </div>

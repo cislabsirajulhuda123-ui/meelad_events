@@ -5,6 +5,7 @@ import {
   useEffect,
   useState,
   type ImgHTMLAttributes,
+  type PointerEvent as ReactPointerEvent,
   type ReactNode,
 } from "react";
 const Context = createContext<Record<string, string>>({});
@@ -34,6 +35,41 @@ function select(key: string) {
     window.location.origin,
   );
 }
+function startDrag(
+  event: ReactPointerEvent<HTMLSpanElement>,
+  key: string,
+  startX: number,
+  startY: number,
+) {
+  event.preventDefault();
+  event.stopPropagation();
+  const element = event.currentTarget;
+  const originX = event.clientX;
+  const originY = event.clientY;
+  let latestX = startX;
+  let latestY = startY;
+  element.setPointerCapture(event.pointerId);
+  const move = (moveEvent: PointerEvent) => {
+    latestX = Math.round(startX + moveEvent.clientX - originX);
+    latestY = Math.round(startY + moveEvent.clientY - originY);
+    element.style.position = "relative";
+    element.style.left = `${latestX}px`;
+    element.style.top = `${latestY}px`;
+  };
+  const finish = () => {
+    element.removeEventListener("pointermove", move);
+    element.removeEventListener("pointerup", finish);
+    element.removeEventListener("pointercancel", finish);
+    window.parent.postMessage(
+      { type: "home-visual-position", key, x: latestX, y: latestY },
+      window.location.origin,
+    );
+    select(key);
+  };
+  element.addEventListener("pointermove", move);
+  element.addEventListener("pointerup", finish);
+  element.addEventListener("pointercancel", finish);
+}
 export function SiteText({ value }: { value: string }) {
   const content = useContext(Context),
     active = useVisualEditor();
@@ -54,7 +90,10 @@ export function SiteText({ value }: { value: string }) {
           ? { position: "relative", left: `${x}px`, top: `${y}px` }
           : {}),
       }}
-      title={active ? "Click to edit" : undefined}
+      title={active ? "Drag to move · Click to edit" : undefined}
+      onPointerDown={
+        active ? (event) => startDrag(event, value, x, y) : undefined
+      }
       onClick={
         active
           ? (e) => {

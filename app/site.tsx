@@ -485,11 +485,22 @@ function FestivalSite({
               })),
           )
       : [];
+  let customHomeTextIds: string[] = [];
+  try {
+    customHomeTextIds = JSON.parse(
+      data.content["custom-home-text-ids"] || "[]",
+    );
+  } catch {}
   return (
     <ContentProvider value={data.content}>
       <Header name={settings.name} navigation={data.navigation} />
       {view === "home" ? (
         <main className="home-page">
+          <div className="custom-home-text-layer">
+            {customHomeTextIds.map((key) => (
+              <SiteText value={key} key={key} />
+            ))}
+          </div>
           <div className="home-background" aria-hidden="true">
             <div className="hero-motion" aria-hidden="true" />
             {data.content["video:home-hero"] && (
