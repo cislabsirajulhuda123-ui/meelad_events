@@ -1327,6 +1327,29 @@ textarea {
   margin: 0;
   cursor: pointer;
 }
+
+.visual-position-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 14px 0 6px;
+}
+
+.visual-position-grid label {
+  display: grid;
+  gap: 6px;
+}
+
+.visual-edit-hidden {
+  opacity: 0.38 !important;
+  outline-style: dashed !important;
+}
+
+@media (max-width: 600px) {
+  .visual-position-grid {
+    grid-template-columns: 1fr;
+  }
+}
 @media (max-width: 650px) {
   .gallery-grid {
     grid-template-columns: 1fr;
@@ -1345,7 +1368,32 @@ textarea {
   text-transform: uppercase;
 }
 .schedule-section {
-  margin-top: 48px;
+  margin-top: 24px;
+}
+.schedule-tabs {
+  display: inline-grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px;
+  margin-top: 24px;
+  padding: 5px;
+  border: 1px solid #ffffff24;
+  border-radius: 14px;
+  background: #ffffff0a;
+}
+.schedule-tabs button {
+  min-width: 135px;
+  border: 0;
+  border-radius: 10px;
+  padding: 11px 18px;
+  color: #b9bdc8;
+  background: transparent;
+  font: 700 13px/1 Arial;
+  cursor: pointer;
+}
+.schedule-tabs button.active {
+  color: #08120d;
+  background: var(--accent, #8ee8b4);
+  box-shadow: 0 5px 20px #0005;
 }
 .schedule-section h2 {
   padding-bottom: 14px;

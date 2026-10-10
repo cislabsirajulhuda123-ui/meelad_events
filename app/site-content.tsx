@@ -38,15 +38,22 @@ export function SiteText({ value }: { value: string }) {
   const content = useContext(Context),
     active = useVisualEditor();
   const shown = content[value] ?? value,
-    color = content[`color:${value}`];
-  return active || color ? (
+    color = content[`color:${value}`],
+    hidden = content[`hidden:${value}`] === "1",
+    x = Number(content[`position-x:${value}`] || 0),
+    y = Number(content[`position-y:${value}`] || 0);
+  if (hidden && !active) return null;
+  return active || color || x || y || hidden ? (
     <span
-      className={active ? "visual-edit-target" : undefined}
-      style={
-        color
+      className={`${active ? "visual-edit-target" : ""}${hidden ? " visual-edit-hidden" : ""}`}
+      style={{
+        ...(color
           ? { color, WebkitTextFillColor: color, background: "none" }
-          : undefined
-      }
+          : {}),
+        ...(x || y
+          ? { position: "relative", left: `${x}px`, top: `${y}px` }
+          : {}),
+      }}
       title={active ? "Click to edit" : undefined}
       onClick={
         active
@@ -58,7 +65,7 @@ export function SiteText({ value }: { value: string }) {
           : undefined
       }
     >
-      {shown}
+      {hidden && active ? `[Hidden] ${shown}` : shown}
     </span>
   ) : (
     <>{shown}</>
@@ -68,10 +75,20 @@ export function SiteImage(props: ImgHTMLAttributes<HTMLImageElement>) {
   const content = useContext(Context),
     active = useVisualEditor();
   const key = "image:" + props.src;
+  const hidden = content[`hidden:${key}`] === "1",
+    x = Number(content[`position-x:${key}`] || 0),
+    y = Number(content[`position-y:${key}`] || 0);
+  if (hidden && !active) return null;
   return (
     <img
       {...props}
-      className={`${props.className || ""}${active ? " visual-edit-target" : ""}`}
+      className={`${props.className || ""}${active ? " visual-edit-target" : ""}${hidden ? " visual-edit-hidden" : ""}`}
+      style={{
+        ...props.style,
+        ...(x || y
+          ? { position: "relative", left: `${x}px`, top: `${y}px` }
+          : {}),
+      }}
       onClick={
         active
           ? (e) => {

@@ -136,6 +136,61 @@ export default function HomeEditor({
               </button>
             </div>
           )}
+          <div className="visual-position-grid">
+            <label>
+              Left / Right (X)
+              <input
+                type="number"
+                value={data.content[`position-x:${selected}`] || "0"}
+                onChange={(e) =>
+                  setText(`position-x:${selected}`, e.target.value)
+                }
+              />
+            </label>
+            <label>
+              Up / Down (Y)
+              <input
+                type="number"
+                value={data.content[`position-y:${selected}`] || "0"}
+                onChange={(e) =>
+                  setText(`position-y:${selected}`, e.target.value)
+                }
+              />
+            </label>
+          </div>
+          <small>
+            X: positive = right, negative = left. Y: positive = down, negative =
+            up.
+          </small>
+          <div className="button-row">
+            <button
+              type="button"
+              className="btn outline small"
+              onClick={() => {
+                resetValue(`position-x:${selected}`);
+                resetValue(`position-y:${selected}`);
+              }}
+            >
+              Reset position
+            </button>
+            {data.content[`hidden:${selected}`] === "1" ? (
+              <button
+                type="button"
+                className="btn small"
+                onClick={() => resetValue(`hidden:${selected}`)}
+              >
+                Restore item
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="btn danger small"
+                onClick={() => setText(`hidden:${selected}`, "1")}
+              >
+                Delete / Hide item
+              </button>
+            )}
+          </div>
           <p>മാറ്റം പൂർത്തിയായാൽ മുകളിലെ Save changes അമർത്തുക.</p>
         </div>
       )}

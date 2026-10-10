@@ -422,6 +422,9 @@ function FestivalSite({
     [query, setQuery] = useState(""),
     [zone, setZone] = useState(view === "standings" ? "OVERALL" : "ALL"),
     [status, setStatus] = useState("ALL"),
+    [scheduleCategory, setScheduleCategory] = useState<"Stage" | "Off-Stage">(
+      "Stage",
+    ),
     [error, setError] = useState(""),
     [refreshing, setRefreshing] = useState(false);
   async function refresh() {
@@ -883,72 +886,89 @@ function FestivalSite({
                 Upcoming events, registration announcements, live competitions
                 and completed events.
               </p>
-              {(["Stage", "Off-Stage"] as const).map((eventCategory) => (
-                <section className="schedule-section" key={eventCategory}>
-                  <h2>
-                    {eventCategory === "Stage"
-                      ? "Stage Events"
-                      : "Off-Stage Events"}
-                  </h2>
-                  <div className="events schedule-list">
-                    {[...data.events]
-                      .filter((event) => event.category === eventCategory)
-                      .sort((a, b) =>
+              <div className="schedule-tabs" role="tablist">
+                {(["Stage", "Off-Stage"] as const).map((category) => (
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={scheduleCategory === category}
+                    className={scheduleCategory === category ? "active" : ""}
+                    onClick={() => setScheduleCategory(category)}
+                    key={category}
+                  >
+                    {category === "Stage" ? "Stage" : "Off-Stage"}
+                  </button>
+                ))}
+              </div>
+              <section className="schedule-section">
+                <h2>{scheduleCategory} Events</h2>
+                <div className="events schedule-list">
+                  {[...data.events]
+                    .filter((event) => event.category === scheduleCategory)
+                    .sort((a, b) => {
+                      const order = {
+                        ENDED: 0,
+                        LIVE: 1,
+                        UPCOMING: 2,
+                        REGISTRATION: 3,
+                      } as const;
+                      return (
+                        order[a.scheduleStatus] - order[b.scheduleStatus] ||
                         (a.scheduleAt || "9999").localeCompare(
                           b.scheduleAt || "9999",
-                        ),
-                      )
-                      .map((item) => {
-                        const scorer = (
-                          item.publishedResults.length
-                            ? item.publishedResults
-                            : item.results
-                        ).find((r) => r.id === item.pinnedTopScorerId);
-                        return (
-                          <a
-                            className="card event-card"
-                            key={item.id}
-                            href={"/results/" + item.id}
-                          >
-                            <div className="split">
-                              <span
-                                className={`schedule-status status-${item.scheduleStatus.toLowerCase()}`}
-                              >
-                                {scheduleLabels[item.scheduleStatus]}
+                        )
+                      );
+                    })
+                    .map((item) => {
+                      const scorer = (
+                        item.publishedResults.length
+                          ? item.publishedResults
+                          : item.results
+                      ).find((r) => r.id === item.pinnedTopScorerId);
+                      return (
+                        <a
+                          className="card event-card"
+                          key={item.id}
+                          href={"/results/" + item.id}
+                        >
+                          <div className="split">
+                            <span
+                              className={`schedule-status status-${item.scheduleStatus.toLowerCase()}`}
+                            >
+                              {scheduleLabels[item.scheduleStatus]}
+                            </span>
+                            {item.resultNumber && (
+                              <span className="eyebrow">
+                                RESULT #{item.resultNumber}
                               </span>
-                              {item.resultNumber && (
-                                <span className="eyebrow">
-                                  RESULT #{item.resultNumber}
-                                </span>
-                              )}
-                            </div>
-                            <h3>{item.name}</h3>
-                            <p>
-                              {categoryNames[item.zone]} · {item.type}
-                            </p>
-                            <div className="venue">
-                              <Activity size={15} />
-                              {item.scheduleAt
-                                ? new Date(item.scheduleAt).toLocaleString(
-                                    "en-IN",
-                                    { dateStyle: "medium", timeStyle: "short" },
-                                  )
-                                : "Time will be announced"}
-                            </div>
-                            {item.scheduleStatus === "LIVE" && scorer && (
-                              <div className="top-scorer">
-                                <strong>LIVE TOP SCORER</strong>
-                                <span>
-                                  {scorer.name} · Chest {scorer.chest || "—"}
-                                </span>
-                              </div>
                             )}
-                          </a>
-                        );
-                      })}
-                  </div>
-                </section>
-              ))}
+                          </div>
+                          <h3>{item.name}</h3>
+                          <p>
+                            {categoryNames[item.zone]} · {item.type}
+                          </p>
+                          <div className="venue">
+                            <Activity size={15} />
+                            {item.scheduleAt
+                              ? new Date(item.scheduleAt).toLocaleString(
+                                  "en-IN",
+                                  { dateStyle: "medium", timeStyle: "short" },
+                                )
+                              : "Time will be announced"}
+                          </div>
+                          {item.scheduleStatus === "LIVE" && scorer && (
+                            <div className="top-scorer">
+                              <strong>LIVE TOP SCORER</strong>
+                              <span>
+                                {scorer.name} · Chest {scorer.chest || "—"}
+                              </span>
+                            </div>
+                          )}
+                        </a>
+                      );
+                    })}
+                </div>
+              </section>
             </>
           )}
           {view === "gallery" && (
