@@ -1,8 +1,10 @@
 "use client";
-
+import { useEffect, useState } from "react";
 import type { Festival } from "@/lib/model";
 
 const homeTexts = [
+  "2027 · KUNDUTHODE",
+  "ORGANIZING SCHOOL NAME",
   "SCROLL TO DISCOVER ↓",
   "View Live Leaderboard",
   "Student Portal",
@@ -61,8 +63,27 @@ export default function HomeEditor({
   data: Festival;
   change: (fn: (data: Festival) => Festival) => void;
 }) {
+  const [selected, setSelected] = useState("");
+  useEffect(() => {
+    const receive = (event: MessageEvent) => {
+      if (
+        event.origin === window.location.origin &&
+        event.data?.type === "home-visual-edit" &&
+        typeof event.data.key === "string"
+      )
+        setSelected(event.data.key);
+    };
+    window.addEventListener("message", receive);
+    return () => window.removeEventListener("message", receive);
+  }, []);
   const setText = (key: string, value: string) =>
     change((d) => ({ ...d, content: { ...d.content, [key]: value } }));
+  const resetValue = (key: string) =>
+    change((d) => {
+      const content = { ...d.content };
+      delete content[key];
+      return { ...d, content };
+    });
   return (
     <section className="card admin-section">
       <h2>Home page editor</h2>
@@ -71,6 +92,53 @@ export default function HomeEditor({
         gallery and footer content. Press <strong>Save changes</strong> when
         finished.
       </p>
+      <h3>Visual home editor</h3>
+      <p>Preview-ൽ മാറ്റേണ്ട text അല്ലെങ്കിൽ image click ചെയ്യുക.</p>
+      <div className="visual-home-editor">
+        <iframe title="Home page visual editor" src="/?visualEdit=1" />
+      </div>
+      {selected && (
+        <div className="card visual-selected-editor">
+          <div className="split">
+            <h3>Edit selected item</h3>
+            <button
+              className="btn outline small"
+              onClick={() => setSelected("")}
+            >
+              Close
+            </button>
+          </div>
+          <small>{selected}</small>
+          <textarea
+            rows={selected.length > 100 ? 5 : 2}
+            value={
+              data.content[selected] ??
+              (selected.startsWith("image:") ? selected.slice(6) : selected)
+            }
+            onChange={(e) => setText(selected, e.target.value)}
+          />
+          {!selected.startsWith("image:") && (
+            <div className="button-row visual-colour-row">
+              <label>
+                Text colour
+                <input
+                  type="color"
+                  value={data.content[`color:${selected}`] || "#ffffff"}
+                  onChange={(e) => setText(`color:${selected}`, e.target.value)}
+                />
+              </label>
+              <button
+                type="button"
+                className="btn outline small"
+                onClick={() => resetValue(`color:${selected}`)}
+              >
+                Reset colour
+              </button>
+            </div>
+          )}
+          <p>മാറ്റം പൂർത്തിയായാൽ മുകളിലെ Save changes അമർത്തുക.</p>
+        </div>
+      )}
 
       <h3>Website identity & hero</h3>
       <div className="form-grid">

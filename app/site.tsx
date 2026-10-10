@@ -486,8 +486,8 @@ function FestivalSite({
     <ContentProvider value={data.content}>
       <Header name={settings.name} navigation={data.navigation} />
       {view === "home" ? (
-        <main>
-          <section className="hero">
+        <main className="home-page">
+          <div className="home-background" aria-hidden="true">
             <div className="hero-motion" aria-hidden="true" />
             {data.content["video:home-hero"] && (
               <video
@@ -500,6 +500,16 @@ function FestivalSite({
               />
             )}
             <div className="hero-shade" aria-hidden="true" />
+          </div>
+          <section className="hero">
+            <div className="hero-date-place">
+              <span>
+                <SiteText value={"2027 · KUNDUTHODE"} />
+              </span>
+              <small>
+                <SiteText value={"ORGANIZING SCHOOL NAME"} />
+              </small>
+            </div>
             <h1>
               {settings.subtitle.split(" ").slice(0, -1).join(" ") || "ZARRAH"}{" "}
               <span className="gradient">
@@ -873,62 +883,72 @@ function FestivalSite({
                 Upcoming events, registration announcements, live competitions
                 and completed events.
               </p>
-              <div className="grid2 events schedule-grid">
-                {[...data.events]
-                  .sort((a, b) =>
-                    (a.scheduleAt || "9999").localeCompare(
-                      b.scheduleAt || "9999",
-                    ),
-                  )
-                  .map((item) => {
-                    const scorer = (
-                      item.publishedResults.length
-                        ? item.publishedResults
-                        : item.results
-                    ).find((r) => r.id === item.pinnedTopScorerId);
-                    return (
-                      <a
-                        className="card event-card"
-                        key={item.id}
-                        href={"/results/" + item.id}
-                      >
-                        <div className="split">
-                          <span
-                            className={`schedule-status status-${item.scheduleStatus.toLowerCase()}`}
+              {(["Stage", "Off-Stage"] as const).map((eventCategory) => (
+                <section className="schedule-section" key={eventCategory}>
+                  <h2>
+                    {eventCategory === "Stage"
+                      ? "Stage Events"
+                      : "Off-Stage Events"}
+                  </h2>
+                  <div className="events schedule-list">
+                    {[...data.events]
+                      .filter((event) => event.category === eventCategory)
+                      .sort((a, b) =>
+                        (a.scheduleAt || "9999").localeCompare(
+                          b.scheduleAt || "9999",
+                        ),
+                      )
+                      .map((item) => {
+                        const scorer = (
+                          item.publishedResults.length
+                            ? item.publishedResults
+                            : item.results
+                        ).find((r) => r.id === item.pinnedTopScorerId);
+                        return (
+                          <a
+                            className="card event-card"
+                            key={item.id}
+                            href={"/results/" + item.id}
                           >
-                            {scheduleLabels[item.scheduleStatus]}
-                          </span>
-                          {item.resultNumber && (
-                            <span className="eyebrow">
-                              RESULT #{item.resultNumber}
-                            </span>
-                          )}
-                        </div>
-                        <h3>{item.name}</h3>
-                        <p>
-                          {categoryNames[item.zone]} · {item.type}
-                        </p>
-                        <div className="venue">
-                          <Activity size={15} />
-                          {item.scheduleAt
-                            ? new Date(item.scheduleAt).toLocaleString(
-                                "en-IN",
-                                { dateStyle: "medium", timeStyle: "short" },
-                              )
-                            : "Time will be announced"}
-                        </div>
-                        {item.scheduleStatus === "LIVE" && scorer && (
-                          <div className="top-scorer">
-                            <strong>LIVE TOP SCORER</strong>
-                            <span>
-                              {scorer.name} · Chest {scorer.chest || "—"}
-                            </span>
-                          </div>
-                        )}
-                      </a>
-                    );
-                  })}
-              </div>
+                            <div className="split">
+                              <span
+                                className={`schedule-status status-${item.scheduleStatus.toLowerCase()}`}
+                              >
+                                {scheduleLabels[item.scheduleStatus]}
+                              </span>
+                              {item.resultNumber && (
+                                <span className="eyebrow">
+                                  RESULT #{item.resultNumber}
+                                </span>
+                              )}
+                            </div>
+                            <h3>{item.name}</h3>
+                            <p>
+                              {categoryNames[item.zone]} · {item.type}
+                            </p>
+                            <div className="venue">
+                              <Activity size={15} />
+                              {item.scheduleAt
+                                ? new Date(item.scheduleAt).toLocaleString(
+                                    "en-IN",
+                                    { dateStyle: "medium", timeStyle: "short" },
+                                  )
+                                : "Time will be announced"}
+                            </div>
+                            {item.scheduleStatus === "LIVE" && scorer && (
+                              <div className="top-scorer">
+                                <strong>LIVE TOP SCORER</strong>
+                                <span>
+                                  {scorer.name} · Chest {scorer.chest || "—"}
+                                </span>
+                              </div>
+                            )}
+                          </a>
+                        );
+                      })}
+                  </div>
+                </section>
+              ))}
             </>
           )}
           {view === "gallery" && (
