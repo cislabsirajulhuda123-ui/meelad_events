@@ -1,3 +1,0 @@
-'use client';
-import {useEffect,useState} from 'react';
-export default function GalleryMedia(){const [items,setItems]=useState<{id:string,title:string,kind:string}[]>([]);const [error,setError]=useState('');useEffect(()=>{fetch('/api/gallery').then(async r=>{if(!r.ok)throw Error();setItems((await r.json()).items)}).catch(()=>setError('Gallery media could not load. Please refresh.'))},[]);return <><div className="gallery-grid">{items.map(m=><figure key={m.id}>{m.kind==='photo'?<img src={'/api/gallery/'+m.id} alt={m.title} loading="lazy" style={{width:'100%'}}/>:<video src={'/api/gallery/'+m.id} controls preload="metadata" style={{width:'100%'}}/>}<figcaption>{m.title}</figcaption></figure>)}</div>{error&&<p role="alert">{error}</p>}</>}
