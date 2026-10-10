@@ -5,6 +5,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
+  const download = new URL(req.url).searchParams.get("download") === "1";
   const r = await db()
     .prepare("SELECT src FROM gallery_media WHERE id=?")
     .bind(id)
@@ -15,6 +16,11 @@ export async function GET(
   return new Response(Buffer.from(data, "base64"), {
     headers: {
       "Content-Type": head.slice(5).split(";")[0],
+      ...(download
+        ? {
+            "Content-Disposition": `attachment; filename="gallery-${id}.${head.includes("video/mp4") ? "mp4" : head.includes("video/webm") ? "webm" : head.includes("image/png") ? "png" : head.includes("image/webp") ? "webp" : "jpg"}"`,
+          }
+        : {}),
       "Cache-Control": "public, max-age=86400",
       "X-Content-Type-Options": "nosniff",
     },

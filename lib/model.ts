@@ -8,6 +8,7 @@ export const zones: Record<string, string> = {
 };
 export const defaultNavigation = [
   { label: "Home", href: "/", visible: true },
+  { label: "Schedule", href: "/schedule", visible: true },
   { label: "Leaderboard", href: "/standings", visible: true },
   { label: "Results", href: "/results", visible: true },
   { label: "Categories", href: "/#zones", visible: true },
@@ -48,6 +49,12 @@ const event = z.object({
     "GENERAL",
   ]),
   venue: text,
+  resultNumber: z.string().trim().max(30).default(""),
+  scheduleAt: z.string().max(40).default(""),
+  scheduleStatus: z
+    .enum(["UPCOMING", "REGISTRATION", "LIVE", "ENDED"])
+    .default("UPCOMING"),
+  pinnedTopScorerId: z.string().max(200).default(""),
   type: z.preprocess(
     (v) => (v === "Group" ? "Group 2" : v),
     z.enum(["Individual", "Group 2", "Group 3", "Group 4", "Group 5"]),

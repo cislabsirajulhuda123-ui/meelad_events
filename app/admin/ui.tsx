@@ -31,7 +31,9 @@ import {
 import { type Festival, type Event, type Result, zones } from "@/lib/model";
 import { Choice } from "../ui";
 import ContentEditor from "./content-editor";
+import HomeEditor from "./home-editor";
 import PosterEditor from "./poster-editor";
+import ScheduleEditor from "./schedule-editor";
 import RegistrationPortal from "../sub-admin/ui";
 export default function Admin({
   initial,
@@ -162,6 +164,10 @@ export default function Admin({
           category: "Stage",
           zone: "HI_ZONE_CAMPUS",
           venue: "Festival Stage",
+          resultNumber: "",
+          scheduleAt: "",
+          scheduleStatus: "UPCOMING",
+          pinnedTopScorerId: "",
           type: "Individual",
           published: false,
           results: [],
@@ -267,10 +273,12 @@ export default function Admin({
           <Tabs defaultValue="events">
             <TabsList className="admin-tabs">
               <TabsTrigger value="events">Events & results</TabsTrigger>
+              <TabsTrigger value="home">Home page</TabsTrigger>
+              <TabsTrigger value="schedule">Schedule & Live</TabsTrigger>
               <TabsTrigger value="teams">Teams</TabsTrigger>
               <TabsTrigger value="posters">Poster drafts</TabsTrigger>
               <TabsTrigger value="settings">Site settings</TabsTrigger>
-              <TabsTrigger value="content">All page content</TabsTrigger>
+              <TabsTrigger value="content">All public pages</TabsTrigger>
               <TabsTrigger value="participants">Participants</TabsTrigger>
             </TabsList>
             <TabsContent value="events">
@@ -354,6 +362,16 @@ export default function Admin({
                             value={event.venue}
                             onChange={(e) =>
                               editEvent({ venue: e.target.value })
+                            }
+                          />
+                        </label>
+                        <label>
+                          Result number
+                          <input
+                            value={event.resultNumber}
+                            placeholder="Example: 90"
+                            onChange={(e) =>
+                              editEvent({ resultNumber: e.target.value })
                             }
                           />
                         </label>
@@ -588,6 +606,12 @@ export default function Admin({
                   )}
                 </div>
               </div>
+            </TabsContent>
+            <TabsContent value="home">
+              <HomeEditor data={data} change={change} />
+            </TabsContent>
+            <TabsContent value="schedule">
+              <ScheduleEditor data={data} change={change} />
             </TabsContent>
             <TabsContent value="teams">
               <section className="card admin-section">

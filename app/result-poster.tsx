@@ -51,7 +51,10 @@ export default function ResultPoster({
               ranked.map((r) => (r.length ? r[page % r.length] : null)),
           )
         : Array.from({ length: Math.ceil(rows.length / 3) }, (_, page) =>
-            rows.slice(page * 3, page * 3 + 3),
+            Array.from(
+              { length: 3 },
+              (_, position) => rows[page * 3 + position] || null,
+            ),
           );
       for (let page = 0; page < posterRows.length; page++) {
         const canvas = document.createElement("canvas");
@@ -61,9 +64,16 @@ export default function ResultPoster({
         if (!ctx)
           throw Error("Poster download is unavailable in this browser.");
         ctx.drawImage(img, 0, 0, 1080, 1080);
-        // Replace only the sample result area; preserve the supplied artwork and logos.
-        ctx.fillStyle = "#111111";
-        ctx.fillRect(480, 440, 560, 405);
+        // Cover only the sample words. The template's existing 1/2/3 artwork
+        // stays visible and becomes the rank marker for the generated result.
+        const customTemplate = templateUrl !== "/hi-zone-poster.jpg";
+        const headerX = customTemplate ? 275 : 480;
+        const headerY = customTemplate ? 520 : 440;
+        const textX = customTemplate ? 300 : 582;
+        const firstRowY = customTemplate ? 655 : 580;
+        const rowGap = customTemplate ? 75 : 88;
+        ctx.fillStyle = customTemplate ? "rgba(10,20,18,.88)" : "#111111";
+        ctx.fillRect(headerX, headerY, customTemplate ? 600 : 550, 95);
         const write = (
           value: string,
           x: number,
@@ -82,53 +92,68 @@ export default function ResultPoster({
           }
           ctx.fillText(value, x, y, width);
         };
+        if (event.resultNumber) {
+          ctx.fillStyle = "rgba(10,10,10,.82)";
+          ctx.fillRect(680, 105, 270, 58);
+          ctx.textAlign = "center";
+          write(
+            `RESULT #${event.resultNumber}`,
+            815,
+            144,
+            235,
+            25,
+            "#ffffff",
+            700,
+          );
+          ctx.textAlign = "left";
+        }
         write(
           categoryLabel ||
             (event.zone === "HI_ZONE_INTER"
               ? "High School · Inter Campus"
               : "High School"),
-          495,
-          478,
-          510,
+          customTemplate ? 300 : 495,
+          customTemplate ? 552 : 478,
+          customTemplate ? 550 : 510,
           21,
           "#91cd79",
         );
-        write(event.name.toUpperCase(), 495, 514, 510, 32, "#2fa58f", 700);
+        write(
+          event.name.toUpperCase(),
+          customTemplate ? 300 : 495,
+          customTemplate ? 592 : 514,
+          customTemplate ? 550 : 510,
+          32,
+          "#2fa58f",
+          700,
+        );
         posterRows[page].forEach((r, i) => {
-          const cy = 581 + i * 88;
-          const gradient = ctx.createLinearGradient(495, cy - 30, 555, cy + 30);
-          gradient.addColorStop(0, "#8bd34f");
-          gradient.addColorStop(1, "#20a18e");
-          ctx.strokeStyle = gradient;
-          ctx.lineWidth = 7;
-          ctx.beginPath();
-          ctx.arc(526, cy, 29, 0, Math.PI * 2);
-          ctx.stroke();
-          ctx.textAlign = "center";
-          write(
-            ["1st", "2nd", "3rd"][(r?.rank || i + 1) - 1],
-            526,
-            cy + 9,
-            48,
-            23,
-            "#ffffff",
-            700,
+          const cy = firstRowY + i * rowGap;
+          // If this rank was not awarded, cover its complete template slot,
+          // including the baked-in rank marker. Do not show "Not announced".
+          ctx.fillStyle = customTemplate ? "rgba(10,20,18,.94)" : "#111111";
+          ctx.fillRect(
+            r ? (customTemplate ? 275 : 570) : customTemplate ? 205 : 480,
+            cy - 35,
+            r ? (customTemplate ? 600 : 465) : customTemplate ? 670 : 555,
+            65,
           );
+          if (!r) return;
           ctx.textAlign = "left";
           write(
-            r ? r.name.toUpperCase() : "NOT ANNOUNCED",
-            582,
-            cy - 1,
-            438,
+            r.name.toUpperCase(),
+            textX,
+            cy,
+            customTemplate ? 550 : 438,
             26,
             "#ffffff",
             700,
           );
           write(
-            r ? "TEAM " + r.team.toUpperCase() : "",
-            582,
-            cy + 20,
-            438,
+            "TEAM " + r.team.toUpperCase(),
+            textX,
+            cy + 22,
+            customTemplate ? 550 : 438,
             16,
             "#eeeeee",
           );
@@ -136,9 +161,9 @@ export default function ResultPoster({
         if (posterRows.length > 1)
           write(
             `PAGE ${page + 1} / ${posterRows.length}`,
-            495,
-            828,
-            510,
+            customTemplate ? 300 : 495,
+            customTemplate ? 875 : 828,
+            customTemplate ? 550 : 510,
             14,
             "#aaaaaa",
           );

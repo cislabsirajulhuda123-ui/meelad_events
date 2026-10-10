@@ -5,8 +5,16 @@ export function db() {
   return database;
 }
 function withoutInterCampus(data: Festival): Festival {
+  const navigation = data.navigation.some((n) => n.href === "/schedule")
+    ? data.navigation
+    : [
+        data.navigation[0],
+        { label: "Schedule", href: "/schedule", visible: true },
+        ...data.navigation.slice(1),
+      ];
   return {
     ...data,
+    navigation,
     events: data.events.map((e) =>
       e.zone === "HI_ZONE_INTER" ? { ...e, zone: "HI_ZONE_CAMPUS" } : e,
     ),

@@ -44,6 +44,12 @@ const links = [
   ["/concept", "Concept", BookOpen],
   ["/brochure", "Brochure", FileText],
 ] as const;
+const scheduleLabels = {
+  UPCOMING: "Upcoming",
+  REGISTRATION: "Registration Open",
+  LIVE: "Live",
+  ENDED: "Ended",
+} as const;
 export function Header({
   name = "MEELAD KUNDUTHODE",
   navigation = defaultNavigation,
@@ -468,7 +474,12 @@ function FestivalSite({
                   (r.chest &&
                     r.chest.toLowerCase() === query.trim().toLowerCase()),
               )
-              .map((r) => ({ ...r, event: e })),
+              .map((r) => ({
+                ...r,
+                event: e,
+                isTopScorer:
+                  e.scheduleStatus === "LIVE" && e.pinnedTopScorerId === r.id,
+              })),
           )
       : [];
   return (
@@ -477,6 +488,18 @@ function FestivalSite({
       {view === "home" ? (
         <main>
           <section className="hero">
+            <div className="hero-motion" aria-hidden="true" />
+            {data.content["video:home-hero"] && (
+              <video
+                className="hero-video"
+                src={data.content["video:home-hero"]}
+                autoPlay
+                muted
+                loop
+                playsInline
+              />
+            )}
+            <div className="hero-shade" aria-hidden="true" />
             <h1>
               {settings.subtitle.split(" ").slice(0, -1).join(" ") || "ZARRAH"}{" "}
               <span className="gradient">
@@ -840,6 +863,74 @@ function FestivalSite({
               <Ranking data={data} zone={zone} />
             </>
           )}
+          {view === "schedule" && (
+            <>
+              <div className="eyebrow">EVENT PROGRAMME</div>
+              <h1>
+                Schedule & <span className="gradient">Live Status</span>
+              </h1>
+              <p>
+                Upcoming events, registration announcements, live competitions
+                and completed events.
+              </p>
+              <div className="grid2 events schedule-grid">
+                {[...data.events]
+                  .sort((a, b) =>
+                    (a.scheduleAt || "9999").localeCompare(
+                      b.scheduleAt || "9999",
+                    ),
+                  )
+                  .map((item) => {
+                    const scorer = (
+                      item.publishedResults.length
+                        ? item.publishedResults
+                        : item.results
+                    ).find((r) => r.id === item.pinnedTopScorerId);
+                    return (
+                      <a
+                        className="card event-card"
+                        key={item.id}
+                        href={"/results/" + item.id}
+                      >
+                        <div className="split">
+                          <span
+                            className={`schedule-status status-${item.scheduleStatus.toLowerCase()}`}
+                          >
+                            {scheduleLabels[item.scheduleStatus]}
+                          </span>
+                          {item.resultNumber && (
+                            <span className="eyebrow">
+                              RESULT #{item.resultNumber}
+                            </span>
+                          )}
+                        </div>
+                        <h3>{item.name}</h3>
+                        <p>
+                          {categoryNames[item.zone]} · {item.type}
+                        </p>
+                        <div className="venue">
+                          <Activity size={15} />
+                          {item.scheduleAt
+                            ? new Date(item.scheduleAt).toLocaleString(
+                                "en-IN",
+                                { dateStyle: "medium", timeStyle: "short" },
+                              )
+                            : "Time will be announced"}
+                        </div>
+                        {item.scheduleStatus === "LIVE" && scorer && (
+                          <div className="top-scorer">
+                            <strong>LIVE TOP SCORER</strong>
+                            <span>
+                              {scorer.name} · Chest {scorer.chest || "—"}
+                            </span>
+                          </div>
+                        )}
+                      </a>
+                    );
+                  })}
+              </div>
+            </>
+          )}
           {view === "gallery" && (
             <>
               <h1>
@@ -963,6 +1054,11 @@ function FestivalSite({
                       href={"/results/" + r.event.id}
                     >
                       <span className="eyebrow">{r.event.name}</span>
+                      {r.isTopScorer && (
+                        <span className="schedule-status status-live">
+                          LIVE TOP SCORER
+                        </span>
+                      )}
                       <h3>{r.name}</h3>
                       <p>
                         {r.team}
