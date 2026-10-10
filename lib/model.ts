@@ -1,12 +1,154 @@
-import {z} from 'zod';
-export const zones:Record<string,string>={HI_ZONE_CAMPUS:'High School',HI_ZONE_INTER:'High School Inter Campus',D_ZONE:'Upper Primary',P_ZONE:'Lower Primary',KIDS:'Kids',GENERAL:'General'};
-export const defaultNavigation=[{label:'Home',href:'/',visible:true},{label:'Leaderboard',href:'/standings',visible:true},{label:'Results',href:'/results',visible:true},{label:'Categories',href:'/#zones',visible:true},{label:'Concept',href:'/concept',visible:true},{label:'Brochure',href:'/brochure',visible:true}];
-const navigationItem=z.object({label:z.string().trim().min(1).max(100),href:z.string().max(2000).refine(v=>/^\/(?!\/)/.test(v)||v.startsWith('https://'),'Use a site path or HTTPS URL'),visible:z.boolean()});
-const text=z.string().trim().max(200);
-const row=z.object({id:text.min(1),name:text.min(1),team:text.min(1),chest:text.max(40),rank:z.number().int().min(0).max(1000),grade:z.enum(['','A','B','C']),points:z.number().min(0).max(10000)});
-const event=z.object({id:text.min(1),name:text.min(1),category:z.enum(['Stage','Off-Stage']),zone:z.enum(['HI_ZONE_CAMPUS','HI_ZONE_INTER','D_ZONE','P_ZONE','KIDS','GENERAL']),venue:text,type:z.preprocess(v=>v==='Group'?'Group 2':v,z.enum(['Individual','Group 2','Group 3','Group 4','Group 5'])),published:z.boolean(),results:z.array(row).max(2000),publishedResults:z.array(row).max(2000)});
-export const stateSchema=z.object({registrationOpen:z.boolean().default(true),navigation:z.array(navigationItem).max(20).default(defaultNavigation),content:z.record(z.string().max(10000)).default({}).refine(d=>Object.entries(d).every(([k,v])=>!k.startsWith('image:')||!v||v.startsWith('https://')||/^\/[a-zA-Z0-9_./-]+$/.test(v)),'Image links must use HTTPS'),categoryLabels:z.record(z.string().trim().min(1).max(100)).default({}),settings:z.object({name:text.min(1),subtitle:text.min(1),theme:text.min(1),venue:text,email:z.string().max(200).email().or(z.literal('')),brochureUrl:z.string().max(2000).refine(s=>!s||s.startsWith('https://'),'Use an HTTPS link'),galleryUrls:z.string().max(20000).default('').refine(s=>s.split(/\n/).every(x=>!x.trim()||x.trim().startsWith('https://')||/^\/gallery-[1-4]\.webp$/.test(x.trim())),'Use HTTPS image URLs'),sourceNote:z.string().max(1000)}),teams:z.array(z.object({id:text.min(1),name:text.min(1),code:text.max(20)})).max(100),events:z.array(event).max(500)}).superRefine((d,c)=>{for(const a of [d.teams,d.events])if(new Set(a.map(x=>x.id)).size!==a.length)c.addIssue({code:'custom',message:'Duplicate identifiers'});const names=new Set(d.teams.map(t=>t.name));if(names.size!==d.teams.length)c.addIssue({code:'custom',message:'Team names must be unique'});for(const e of d.events)for(const r of [...e.results,...e.publishedResults])if(!names.has(r.team))c.addIssue({code:'custom',message:'Result refers to missing team'});});
-export type Festival=z.infer<typeof stateSchema>;
-export type Event=Festival['events'][number];
-export type Result=Event['results'][number];
-export function standings(data:Festival,zone='OVERALL'){return data.teams.map(t=>({...t,points:data.events.filter(e=>e.published&&(zone==='OVERALL'?e.zone!=='HI_ZONE_INTER':e.zone===zone)).reduce((sum,e)=>sum+(e.type!=='Individual'?Math.max(0,...e.publishedResults.filter(r=>r.team===t.name).map(r=>r.points)):e.publishedResults.filter(r=>r.team===t.name).reduce((n,r)=>n+r.points,0)),0)})).sort((a,b)=>b.points-a.points||a.name.localeCompare(b.name));}
+import { z } from "zod";
+export const zones: Record<string, string> = {
+  HI_ZONE_CAMPUS: "High School",
+  D_ZONE: "Upper Primary",
+  P_ZONE: "Lower Primary",
+  KIDS: "Kids",
+  GENERAL: "General",
+};
+export const defaultNavigation = [
+  { label: "Home", href: "/", visible: true },
+  { label: "Leaderboard", href: "/standings", visible: true },
+  { label: "Results", href: "/results", visible: true },
+  { label: "Categories", href: "/#zones", visible: true },
+  { label: "Concept", href: "/concept", visible: true },
+  { label: "Brochure", href: "/brochure", visible: true },
+];
+const navigationItem = z.object({
+  label: z.string().trim().min(1).max(100),
+  href: z
+    .string()
+    .max(2000)
+    .refine(
+      (v) => /^\/(?!\/)/.test(v) || v.startsWith("https://"),
+      "Use a site path or HTTPS URL",
+    ),
+  visible: z.boolean(),
+});
+const text = z.string().trim().max(200);
+const row = z.object({
+  id: text.min(1),
+  name: text.min(1),
+  team: text.min(1),
+  chest: text.max(40),
+  rank: z.number().int().min(0).max(1000),
+  grade: z.enum(["", "A", "B", "C"]),
+  points: z.number().min(0).max(10000),
+});
+const event = z.object({
+  id: text.min(1),
+  name: text.min(1),
+  category: z.enum(["Stage", "Off-Stage"]),
+  zone: z.enum([
+    "HI_ZONE_CAMPUS",
+    "HI_ZONE_INTER",
+    "D_ZONE",
+    "P_ZONE",
+    "KIDS",
+    "GENERAL",
+  ]),
+  venue: text,
+  type: z.preprocess(
+    (v) => (v === "Group" ? "Group 2" : v),
+    z.enum(["Individual", "Group 2", "Group 3", "Group 4", "Group 5"]),
+  ),
+  published: z.boolean(),
+  results: z.array(row).max(2000),
+  publishedResults: z.array(row).max(2000),
+});
+export const stateSchema = z
+  .object({
+    registrationOpen: z.boolean().default(true),
+    navigation: z.array(navigationItem).max(20).default(defaultNavigation),
+    content: z
+      .record(z.string().max(10000))
+      .default({})
+      .refine(
+        (d) =>
+          Object.entries(d).every(
+            ([k, v]) =>
+              !k.startsWith("image:") ||
+              !v ||
+              v.startsWith("https://") ||
+              /^\/[a-zA-Z0-9_./-]+$/.test(v),
+          ),
+        "Image links must use HTTPS",
+      ),
+    categoryLabels: z.record(z.string().trim().min(1).max(100)).default({}),
+    settings: z.object({
+      name: text.min(1),
+      subtitle: text.min(1),
+      theme: text.min(1),
+      venue: text,
+      email: z.string().max(200).email().or(z.literal("")),
+      brochureUrl: z
+        .string()
+        .max(2000)
+        .refine((s) => !s || s.startsWith("https://"), "Use an HTTPS link"),
+      galleryUrls: z
+        .string()
+        .max(20000)
+        .default("")
+        .refine(
+          (s) =>
+            s
+              .split(/\n/)
+              .every(
+                (x) =>
+                  !x.trim() ||
+                  x.trim().startsWith("https://") ||
+                  /^\/gallery-[1-4]\.webp$/.test(x.trim()),
+              ),
+          "Use HTTPS image URLs",
+        ),
+      sourceNote: z.string().max(1000),
+    }),
+    teams: z
+      .array(
+        z.object({ id: text.min(1), name: text.min(1), code: text.max(20) }),
+      )
+      .max(100),
+    events: z.array(event).max(500),
+  })
+  .superRefine((d, c) => {
+    for (const a of [d.teams, d.events])
+      if (new Set(a.map((x) => x.id)).size !== a.length)
+        c.addIssue({ code: "custom", message: "Duplicate identifiers" });
+    const names = new Set(d.teams.map((t) => t.name));
+    if (names.size !== d.teams.length)
+      c.addIssue({ code: "custom", message: "Team names must be unique" });
+    for (const e of d.events)
+      for (const r of [...e.results, ...e.publishedResults])
+        if (!names.has(r.team))
+          c.addIssue({
+            code: "custom",
+            message: "Result refers to missing team",
+          });
+  });
+export type Festival = z.infer<typeof stateSchema>;
+export type Event = Festival["events"][number];
+export type Result = Event["results"][number];
+export function standings(data: Festival, zone = "OVERALL") {
+  return data.teams
+    .map((t) => ({
+      ...t,
+      points: data.events
+        .filter((e) => e.published && (zone === "OVERALL" || e.zone === zone))
+        .reduce(
+          (sum, e) =>
+            sum +
+            (e.type !== "Individual"
+              ? Math.max(
+                  0,
+                  ...e.publishedResults
+                    .filter((r) => r.team === t.name)
+                    .map((r) => r.points),
+                )
+              : e.publishedResults
+                  .filter((r) => r.team === t.name)
+                  .reduce((n, r) => n + r.points, 0)),
+          0,
+        ),
+    }))
+    .sort((a, b) => b.points - a.points || a.name.localeCompare(b.name));
+}
