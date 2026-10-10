@@ -1,0 +1,682 @@
+[
+  {
+    "key": "image:/title.webp",
+    "kind": "image",
+    "group": "Navigation"
+  },
+  {
+    "key": "Student Portal",
+    "kind": "text",
+    "group": "Navigation"
+  },
+  {
+    "key": "Print scorecard",
+    "kind": "text",
+    "group": "Result scorecards"
+  },
+  {
+    "key": "Results not published yet",
+    "kind": "text",
+    "group": "Result scorecards"
+  },
+  {
+    "key": "The scorecard will appear when the admin publishes it.",
+    "kind": "text",
+    "group": "Result scorecards"
+  },
+  {
+    "key": " PLACE",
+    "kind": "text",
+    "group": "Result scorecards"
+  },
+  {
+    "key": "Grade: ",
+    "kind": "text",
+    "group": "Result scorecards"
+  },
+  {
+    "key": "pts",
+    "kind": "text",
+    "group": "Result scorecards"
+  },
+  {
+    "key": "Rank",
+    "kind": "text",
+    "group": "Result scorecards"
+  },
+  {
+    "key": "Participant",
+    "kind": "text",
+    "group": "Result scorecards"
+  },
+  {
+    "key": "Team",
+    "kind": "text",
+    "group": "Result scorecards"
+  },
+  {
+    "key": "Grade",
+    "kind": "text",
+    "group": "Result scorecards"
+  },
+  {
+    "key": "Points",
+    "kind": "text",
+    "group": "Result scorecards"
+  },
+  {
+    "key": "CODE: ",
+    "kind": "text",
+    "group": "Leaderboard"
+  },
+  {
+    "key": "RANK #",
+    "kind": "text",
+    "group": "Leaderboard"
+  },
+  {
+    "key": "TOTAL POINTS",
+    "kind": "text",
+    "group": "Leaderboard"
+  },
+  {
+    "key": "Rank & Team",
+    "kind": "text",
+    "group": "Leaderboard"
+  },
+  {
+    "key": "Championship Points",
+    "kind": "text",
+    "group": "Leaderboard"
+  },
+  {
+    "key": " points",
+    "kind": "text",
+    "group": "Leaderboard"
+  },
+  {
+    "key": "CONCEPT NOTE 2026",
+    "kind": "text",
+    "group": "Concept"
+  },
+  {
+    "key": "DECIMAL VOICES |",
+    "kind": "text",
+    "group": "Concept"
+  },
+  {
+    "key": "THE NEXT DECIMAL",
+    "kind": "text",
+    "group": "Concept"
+  },
+  {
+    "key": "“The universe is an absolute totality of Cosmic Precision.”",
+    "kind": "text",
+    "group": "Concept"
+  },
+  {
+    "key": "Sacred & foundational rationales",
+    "kind": "text",
+    "group": "Concept"
+  },
+  {
+    "key": "SURAH AL-QAMAR 54:49",
+    "kind": "text",
+    "group": "Concept"
+  },
+  {
+    "key": "إِنَّا كُلَّ شَيْءٍ خَلَقْنَاهُ بِقَدَرٍ",
+    "kind": "text",
+    "group": "Concept"
+  },
+  {
+    "key": "“Indeed, all things We created with predetermined measure.”",
+    "kind": "text",
+    "group": "Concept"
+  },
+  {
+    "key": "SURAH AR-RAHMAN 55:7",
+    "kind": "text",
+    "group": "Concept"
+  },
+  {
+    "key": "وَالسَّمَاءَ رَفَعَهَا وَوَضَعَ الْمِيزَانَ",
+    "kind": "text",
+    "group": "Concept"
+  },
+  {
+    "key": "“And the heaven He raised and imposed the balance.”",
+    "kind": "text",
+    "group": "Concept"
+  },
+  {
+    "key": "SURAH AS-SAJDAH 32:7",
+    "kind": "text",
+    "group": "Concept"
+  },
+  {
+    "key": "الَّذِي أَحْسَنَ كُلَّ شَيْءٍ خَلَقَهُ",
+    "kind": "text",
+    "group": "Concept"
+  },
+  {
+    "key": "“Who perfected everything which He created.”",
+    "kind": "text",
+    "group": "Concept"
+  },
+  {
+    "key": "The epistemic mandate: beyond approximations",
+    "kind": "text",
+    "group": "Concept"
+  },
+  {
+    "key": "The universe operates on absolute cosmic precision, not approximations. From galactic orbits and gravitational equilibrium to subatomic interactions and cellular differentiation, everything in nature is governed by microscopic measurements. These calculations never end in an integer; rather, they unfold dynamically across infinite fractional dimensions.",
+    "kind": "text",
+    "group": "Concept"
+  },
+  {
+    "key": "Truth resides not in “rounding off” realities, but in the epistemic curiosity to search for the next decimal. Complex human conditions, ethical decisions, and artistic endeavors should not be flattened into coarse averages and convenient approximations.",
+    "kind": "text",
+    "group": "Concept"
+  },
+  {
+    "key": "The primary academic objectives",
+    "kind": "text",
+    "group": "Concept"
+  },
+  {
+    "key": "[OBJ // 0",
+    "kind": "text",
+    "group": "Concept"
+  },
+  {
+    "key": "“Scroll less. Measure more. The next decimal is where the noise ends and the signal begins.”",
+    "kind": "text",
+    "group": "Concept"
+  },
+  {
+    "key": "Concept adapted from ",
+    "kind": "text",
+    "group": "Concept"
+  },
+  {
+    "key": "Cognizium’s original concept note ↗",
+    "kind": "text",
+    "group": "Concept"
+  },
+  {
+    "key": "SCROLL TO DISCOVER ↓",
+    "kind": "text",
+    "group": "Home & public pages"
+  },
+  {
+    "key": "View Live Leaderboard",
+    "kind": "text",
+    "group": "Home & public pages"
+  },
+  {
+    "key": "Event Results",
+    "kind": "text",
+    "group": "Home & public pages"
+  },
+  {
+    "key": " TEAMS · 4 CATEGORIES · ",
+    "kind": "text",
+    "group": "Home & public pages"
+  },
+  {
+    "key": " EVENTS",
+    "kind": "text",
+    "group": "Home & public pages"
+  },
+  {
+    "key": "DECIMAL VOICES | ",
+    "kind": "text",
+    "group": "Home & public pages"
+  },
+  {
+    "key": "The universe operates on absolute cosmic precision, not approximations. From galactic orbits to cellular differentiation, everything is controlled by microscopic measurements. Discover why the truth resides not in “rounding off” realities, but in the epistemic curiosity to search for the next decimal.",
+    "kind": "text",
+    "group": "Home & public pages"
+  },
+  {
+    "key": "[0.004] Read Full Concept ",
+    "kind": "text",
+    "group": "Home & public pages"
+  },
+  {
+    "key": "COSMIC PRECISION",
+    "kind": "text",
+    "group": "Home & public pages"
+  },
+  {
+    "key": "“Truth resides not in approximations, but in precision. Scroll less. Measure more.”",
+    "kind": "text",
+    "group": "Home & public pages"
+  },
+  {
+    "key": "DECIMAL VOICES 2026",
+    "kind": "text",
+    "group": "Home & public pages"
+  },
+  {
+    "key": "DISCOVER THE OFFICIAL ",
+    "kind": "text",
+    "group": "Home & public pages"
+  },
+  {
+    "key": "FESTIVAL BROCHURE",
+    "kind": "text",
+    "group": "Home & public pages"
+  },
+  {
+    "key": "Explore the official Cognizium 2026 digital brochure to discover the full Decimal Voices theme.",
+    "kind": "text",
+    "group": "Home & public pages"
+  },
+  {
+    "key": "[0.005] READ FULL BROCHURE ",
+    "kind": "text",
+    "group": "Home & public pages"
+  },
+  {
+    "key": "FESTIVAL ",
+    "kind": "text",
+    "group": "Home & public pages"
+  },
+  {
+    "key": "CATEGORIES & STAGES",
+    "kind": "text",
+    "group": "Home & public pages"
+  },
+  {
+    "key": "Events for High School, Upper Primary, Lower Primary and Kids, with published results and team standings.",
+    "kind": "text",
+    "group": "Home & public pages"
+  },
+  {
+    "key": "CHAMPIONSHIP ",
+    "kind": "text",
+    "group": "Home & public pages"
+  },
+  {
+    "key": "LEADERBOARD",
+    "kind": "text",
+    "group": "Home & public pages"
+  },
+  {
+    "key": "[0.006] Open Full Leaderboard ",
+    "kind": "text",
+    "group": "Home & public pages"
+  },
+  {
+    "key": "GALLERY & ",
+    "kind": "text",
+    "group": "Home & public pages"
+  },
+  {
+    "key": "HIGHLIGHTS",
+    "kind": "text",
+    "group": "Home & public pages"
+  },
+  {
+    "key": "Capturing unforgettable moments of artistic brilliance and stage performances.",
+    "kind": "text",
+    "group": "Home & public pages"
+  },
+  {
+    "key": "View all highlights →",
+    "kind": "text",
+    "group": "Home & public pages"
+  },
+  {
+    "key": "Check your results",
+    "kind": "text",
+    "group": "Home & public pages"
+  },
+  {
+    "key": "Back to festival",
+    "kind": "text",
+    "group": "Home & public pages"
+  },
+  {
+    "key": "COMPETITION RESULTS & SCORECARDS",
+    "kind": "text",
+    "group": "Home & public pages"
+  },
+  {
+    "key": "Event Scorecard ",
+    "kind": "text",
+    "group": "Home & public pages"
+  },
+  {
+    "key": "Directory",
+    "kind": "text",
+    "group": "Home & public pages"
+  },
+  {
+    "key": "Candidate ranks, awarded grades, and published team points.",
+    "kind": "text",
+    "group": "Home & public pages"
+  },
+  {
+    "key": " TOTAL EVENTS ",
+    "kind": "text",
+    "group": "Home & public pages"
+  },
+  {
+    "key": " PUBLISHED",
+    "kind": "text",
+    "group": "Home & public pages"
+  },
+  {
+    "key": "No events match these filters.",
+    "kind": "text",
+    "group": "Home & public pages"
+  },
+  {
+    "key": "← All events",
+    "kind": "text",
+    "group": "Home & public pages"
+  },
+  {
+    "key": "Ranked automatically by total published points. Updates every 10 seconds.",
+    "kind": "text",
+    "group": "Home & public pages"
+  },
+  {
+    "key": "Overall totals exclude the separately scored High School Inter Campus category.",
+    "kind": "text",
+    "group": "Home & public pages"
+  },
+  {
+    "key": "Moments from Cognizium 2026.",
+    "kind": "text",
+    "group": "Home & public pages"
+  },
+  {
+    "key": "Photos will be added soon.",
+    "kind": "text",
+    "group": "Home & public pages"
+  },
+  {
+    "key": "COGNIZIUM 2026",
+    "kind": "text",
+    "group": "Home & public pages"
+  },
+  {
+    "key": "THE FESTIVAL ",
+    "kind": "text",
+    "group": "Home & public pages"
+  },
+  {
+    "key": "BROCHURE",
+    "kind": "text",
+    "group": "Home & public pages"
+  },
+  {
+    "key": "Discover the theme, festival vision and program details.",
+    "kind": "text",
+    "group": "Home & public pages"
+  },
+  {
+    "key": "Open festival brochure ",
+    "kind": "text",
+    "group": "Home & public pages"
+  },
+  {
+    "key": "The brochure will be available soon.",
+    "kind": "text",
+    "group": "Home & public pages"
+  },
+  {
+    "key": "The brochure opens in a new tab.",
+    "kind": "text",
+    "group": "Home & public pages"
+  },
+  {
+    "key": "STUDENT PORTAL",
+    "kind": "text",
+    "group": "Home & public pages"
+  },
+  {
+    "key": "YOUR ",
+    "kind": "text",
+    "group": "Home & public pages"
+  },
+  {
+    "key": "RESULTS.",
+    "kind": "text",
+    "group": "Home & public pages"
+  },
+  {
+    "key": "Search your name or an admin-assigned chest number to find your published scorecards.",
+    "kind": "text",
+    "group": "Home & public pages"
+  },
+  {
+    "key": "Enter at least two characters to search published results.",
+    "kind": "text",
+    "group": "Home & public pages"
+  },
+  {
+    "key": " · Rank ",
+    "kind": "text",
+    "group": "Home & public pages"
+  },
+  {
+    "key": " · Grade ",
+    "kind": "text",
+    "group": "Home & public pages"
+  },
+  {
+    "key": "No published results match that name or chest number.",
+    "kind": "text",
+    "group": "Home & public pages"
+  },
+  {
+    "key": "The Next Decimal. A cultural and intellectual festival.",
+    "kind": "text",
+    "group": "Home & public pages"
+  },
+  {
+    "key": "ORIGINAL FESTIVAL ORGANIZER",
+    "kind": "text",
+    "group": "Home & public pages"
+  },
+  {
+    "key": "image:/hidalogo.webp",
+    "kind": "image",
+    "group": "Home & public pages"
+  },
+  {
+    "key": "PLATFORM DIRECTORY",
+    "kind": "text",
+    "group": "Home & public pages"
+  },
+  {
+    "key": "Admin",
+    "kind": "text",
+    "group": "Home & public pages"
+  },
+  {
+    "key": "VENUE & CONNECT",
+    "kind": "text",
+    "group": "Home & public pages"
+  },
+  {
+    "key": "Original Cognizium site ↗",
+    "kind": "text",
+    "group": "Home & public pages"
+  },
+  {
+    "key": "Home",
+    "kind": "text",
+    "group": "Navigation & cards"
+  },
+  {
+    "key": "Leaderboard",
+    "kind": "text",
+    "group": "Navigation & cards"
+  },
+  {
+    "key": "Results",
+    "kind": "text",
+    "group": "Navigation & cards"
+  },
+  {
+    "key": "Categories",
+    "kind": "text",
+    "group": "Navigation & cards"
+  },
+  {
+    "key": "Concept",
+    "kind": "text",
+    "group": "Navigation & cards"
+  },
+  {
+    "key": "Brochure",
+    "kind": "text",
+    "group": "Navigation & cards"
+  },
+  {
+    "key": "Information Technology Analytics",
+    "kind": "text",
+    "group": "Navigation & cards"
+  },
+  {
+    "key": "Extract the nuances of truth from information overload. Filter out algorithmic noise to discover subtle, verified signals.",
+    "kind": "text",
+    "group": "Navigation & cards"
+  },
+  {
+    "key": "Intellectual Discipline",
+    "kind": "text",
+    "group": "Navigation & cards"
+  },
+  {
+    "key": "Challenge assumptions through careful inquiry and evidence.",
+    "kind": "text",
+    "group": "Navigation & cards"
+  },
+  {
+    "key": "Social Responsibility",
+    "kind": "text",
+    "group": "Navigation & cards"
+  },
+  {
+    "key": "Recognize that systemic integrity begins with individual accountability to the smallest detail.",
+    "kind": "text",
+    "group": "Navigation & cards"
+  },
+  {
+    "key": "Ecological Interdependence",
+    "kind": "text",
+    "group": "Navigation & cards"
+  },
+  {
+    "key": "Respect the subtle identities and connections within oneself, society, and the universe.",
+    "kind": "text",
+    "group": "Navigation & cards"
+  },
+  {
+    "key": "HIGH SCHOOL",
+    "kind": "text",
+    "group": "Navigation & cards"
+  },
+  {
+    "key": "MAIN STAGE",
+    "kind": "text",
+    "group": "Navigation & cards"
+  },
+  {
+    "key": "High School",
+    "kind": "text",
+    "group": "Navigation & cards"
+  },
+  {
+    "key": "Main stage featuring premier fine arts, oil painting, water color impressionism, and flagship solo competitions.",
+    "kind": "text",
+    "group": "Navigation & cards"
+  },
+  {
+    "key": "Main Auditorium & Studio A",
+    "kind": "text",
+    "group": "Navigation & cards"
+  },
+  {
+    "key": "LOWER PRIMARY",
+    "kind": "text",
+    "group": "Navigation & cards"
+  },
+  {
+    "key": "EXHIBITION HALL",
+    "kind": "text",
+    "group": "Navigation & cards"
+  },
+  {
+    "key": "Lower Primary",
+    "kind": "text",
+    "group": "Navigation & cards"
+  },
+  {
+    "key": "Dedicated arena for charcoal portraiture, clay modeling, graphic design, and expressive sketching events.",
+    "kind": "text",
+    "group": "Navigation & cards"
+  },
+  {
+    "key": "Exhibition Hall 2 & Studio B",
+    "kind": "text",
+    "group": "Navigation & cards"
+  },
+  {
+    "key": "UPPER PRIMARY",
+    "kind": "text",
+    "group": "Navigation & cards"
+  },
+  {
+    "key": "AMPHITHEATRE",
+    "kind": "text",
+    "group": "Navigation & cards"
+  },
+  {
+    "key": "Upper Primary",
+    "kind": "text",
+    "group": "Navigation & cards"
+  },
+  {
+    "key": "Specialized stage featuring regional teams in high-energy contests.",
+    "kind": "text",
+    "group": "Navigation & cards"
+  },
+  {
+    "key": "Open Air Amphitheatre",
+    "kind": "text",
+    "group": "Navigation & cards"
+  },
+  {
+    "key": "KIDS",
+    "kind": "text",
+    "group": "Navigation & cards"
+  },
+  {
+    "key": "KIDS CATEGORY",
+    "kind": "text",
+    "group": "Navigation & cards"
+  },
+  {
+    "key": "Kids",
+    "kind": "text",
+    "group": "Navigation & cards"
+  },
+  {
+    "key": "Competitions and published results for the Kids category.",
+    "kind": "text",
+    "group": "Navigation & cards"
+  },
+  {
+    "key": "See individual events",
+    "kind": "text",
+    "group": "Navigation & cards"
+  }
+]
