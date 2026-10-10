@@ -5,12 +5,24 @@ export function db() {
   return database;
 }
 function withoutInterCampus(data: Festival): Festival {
-  const navigation = data.navigation.some((n) => n.href === "/schedule")
+  const navigationWithSchedule = data.navigation.some(
+    (n) => n.href === "/schedule",
+  )
     ? data.navigation
     : [
         data.navigation[0],
         { label: "Schedule", href: "/schedule", visible: true },
         ...data.navigation.slice(1),
+      ];
+  const navigation = navigationWithSchedule.some(
+    (n) => n.href === "/top-scorer",
+  )
+    ? navigationWithSchedule
+    : [
+        navigationWithSchedule[0],
+        navigationWithSchedule[1],
+        { label: "Top Scorer", href: "/top-scorer", visible: true },
+        ...navigationWithSchedule.slice(2),
       ];
   return {
     ...data,

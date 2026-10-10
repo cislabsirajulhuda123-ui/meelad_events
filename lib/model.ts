@@ -9,6 +9,7 @@ export const zones: Record<string, string> = {
 export const defaultNavigation = [
   { label: "Home", href: "/", visible: true },
   { label: "Schedule", href: "/schedule", visible: true },
+  { label: "Top Scorer", href: "/top-scorer", visible: true },
   { label: "Leaderboard", href: "/standings", visible: true },
   { label: "Results", href: "/results", visible: true },
   { label: "Categories", href: "/#zones", visible: true },

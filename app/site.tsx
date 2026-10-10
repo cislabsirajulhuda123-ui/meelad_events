@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Home,
   Trophy,
@@ -33,7 +33,7 @@ import {
 } from "@/lib/model";
 import { Choice } from "./ui";
 import { ContentProvider, SiteText, SiteImage } from "./site-content";
-import GalleryMedia from "./gallery-media";
+import GalleryMedia, { HomeGalleryPreview } from "./gallery-media";
 import ResultPoster from "./result-poster";
 import { posterCategoryKey, posterContentKey } from "@/lib/poster";
 const links = [
@@ -116,6 +116,11 @@ function Scorecard({
             <SiteText value={" · "} />
             {labels[event.zone]}
           </div>
+          {event.resultNumber && (
+            <div className="result-number-badge">
+              RESULT #{event.resultNumber}
+            </div>
+          )}
           <h1>{event.name}</h1>
           <p>
             {event.type}
@@ -418,6 +423,7 @@ function FestivalSite({
   view: string;
   eventId?: string;
 }) {
+  const scheduleAutoScrolled = useRef(false);
   const [data, setData] = useState(initial),
     [query, setQuery] = useState(""),
     [zone, setZone] = useState(view === "standings" ? "OVERALL" : "ALL"),
@@ -456,6 +462,21 @@ function FestivalSite({
       window.removeEventListener("online", update);
     };
   }, []);
+  useEffect(() => {
+    if (view !== "schedule" || scheduleAutoScrolled.current) return;
+    const liveEvent = data.events.find(
+      (item) => item.scheduleStatus === "LIVE",
+    );
+    if (!liveEvent) return;
+    scheduleAutoScrolled.current = true;
+    setScheduleCategory(liveEvent.category);
+    const timer = window.setTimeout(() => {
+      document
+        .querySelector('[data-live-schedule="true"]')
+        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 180);
+    return () => window.clearTimeout(timer);
+  }, [data.events, view]);
   const { settings } = data;
   const categoryNames = { ...zones, ...data.categoryLabels };
   const filtered = data.events.filter(
@@ -491,6 +512,28 @@ function FestivalSite({
       data.content["custom-home-text-ids"] || "[]",
     );
   } catch {}
+  function topScorerFor(category: "Stage" | "Off-Stage") {
+    const scores = new Map<
+      string,
+      { name: string; chest: string; team: string; points: number }
+    >();
+    data.events
+      .filter((item) => item.category === category && item.published)
+      .flatMap((item) =>
+        item.publishedResults.length ? item.publishedResults : item.results,
+      )
+      .forEach((result) => {
+        const key = `${result.chest || result.name}|${result.team}`;
+        const previous = scores.get(key);
+        scores.set(key, {
+          name: result.name,
+          chest: result.chest,
+          team: result.team,
+          points: (previous?.points || 0) + result.points,
+        });
+      });
+    return [...scores.values()].sort((a, b) => b.points - a.points)[0];
+  }
   return (
     <ContentProvider value={data.content}>
       <Header name={settings.name} navigation={data.navigation} />
@@ -704,21 +747,9 @@ function FestivalSite({
                   }
                 />
               </p>
-              <div className="gallery-grid">
-                {settings.galleryUrls
-                  .split(/\n/)
-                  .filter(Boolean)
-                  .slice(0, 4)
-                  .map((url, i) => (
-                    <a key={url} href="/gallery">
-                      <SiteImage
-                        src={url}
-                        alt={"Cognizium festival moment " + (i + 1)}
-                        loading="lazy"
-                      />
-                    </a>
-                  ))}
-              </div>
+              <HomeGalleryPreview
+                fallbackUrls={settings.galleryUrls.split(/\n/).filter(Boolean)}
+              />
               <a className="text-link" href="/gallery">
                 <SiteText value={"View all highlights →"} />
               </a>
@@ -811,6 +842,11 @@ function FestivalSite({
                       </span>
                     </div>
                     <h3>{e.name}</h3>
+                    {e.resultNumber && (
+                      <div className="result-number-badge">
+                        RESULT #{e.resultNumber}
+                      </div>
+                    )}
                     <div className="split">
                       <small>
                         <MapPin size={13} />
@@ -840,6 +876,7 @@ function FestivalSite({
               <ResultPoster
                 event={event}
                 categoryLabel={categoryNames[event.zone]}
+                uploadedPosterUrl={data.content[`event-poster:${event.id}`]}
                 templateUrl={
                   (posterCategoryKey(event.zone) &&
                     data.content[
@@ -920,8 +957,8 @@ function FestivalSite({
                       const order = {
                         ENDED: 0,
                         LIVE: 1,
-                        UPCOMING: 2,
-                        REGISTRATION: 3,
+                        REGISTRATION: 2,
+                        UPCOMING: 3,
                       } as const;
                       return (
                         order[a.scheduleStatus] - order[b.scheduleStatus] ||
@@ -941,6 +978,9 @@ function FestivalSite({
                           className="card event-card"
                           key={item.id}
                           href={"/results/" + item.id}
+                          data-live-schedule={
+                            item.scheduleStatus === "LIVE" || undefined
+                          }
                         >
                           <div className="split">
                             <span
@@ -981,6 +1021,49 @@ function FestivalSite({
                 </div>
               </section>
             </>
+          )}
+          {view === "top-scorer" && (
+            <section className="card top-scorer-panel">
+              <div className="top-scorer-panel-head">
+                <div>
+                  <div className="eyebrow">AUTOMATIC POINT CALCULATION</div>
+                  <h1>
+                    Top <span className="gradient">Scorer</span>
+                  </h1>
+                  <p>Calculated automatically from published result points.</p>
+                </div>
+              </div>
+              <div className="top-scorer-two-cards">
+                {(["Stage", "Off-Stage"] as const).map((category) => {
+                  const scorer = topScorerFor(category);
+                  return (
+                    <article className="top-scorer-winner" key={category}>
+                      <div className="winner-rank">#1</div>
+                      {scorer ? (
+                        <>
+                          <div>
+                            <small>{category.toUpperCase()} TOP SCORER</small>
+                            <h2>{scorer.name}</h2>
+                            <span>
+                              Chest {scorer.chest || "—"} · {scorer.team}
+                            </span>
+                          </div>
+                          <b className="winner-points">
+                            <small>TOTAL POINTS</small>
+                            {scorer.points}
+                          </b>
+                        </>
+                      ) : (
+                        <div>
+                          <small>{category.toUpperCase()} TOP SCORER</small>
+                          <span>Not announced</span>
+                        </div>
+                      )}
+                    </article>
+                  );
+                })}
+              </div>
+            </section>
           )}
           {view === "gallery" && (
             <>

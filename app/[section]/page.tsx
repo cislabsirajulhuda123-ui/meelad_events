@@ -17,6 +17,7 @@ export default async function Page({
       "student",
       "gallery",
       "schedule",
+      "top-scorer",
     ].includes(section)
   )
     notFound();

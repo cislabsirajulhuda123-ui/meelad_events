@@ -35,6 +35,7 @@ import HomeEditor from "./home-editor";
 import PosterEditor from "./poster-editor";
 import ScheduleEditor from "./schedule-editor";
 import RegistrationPortal from "../sub-admin/ui";
+import EventPosterUpload from "./event-poster-upload";
 export default function Admin({
   initial,
   initialRevision,
@@ -421,6 +422,11 @@ export default function Admin({
                           </span>
                         </div>
                       </div>
+                      <EventPosterUpload
+                        eventId={event.id}
+                        data={data}
+                        change={change}
+                      />
                       <div className="split results-heading">
                         <div>
                           <h3>Results draft</h3>

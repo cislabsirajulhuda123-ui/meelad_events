@@ -16,8 +16,12 @@ export async function POST(req: Request) {
         { status: 413 },
       );
     const body = JSON.parse(raw) as { category?: string; src?: string };
+    const validCategory =
+      posterCategories.some((c) => c.key === body.category) ||
+      (typeof body.category === "string" &&
+        /^event:[a-zA-Z0-9_-]{1,200}$/.test(body.category));
     if (
-      !posterCategories.some((c) => c.key === body.category) ||
+      !validCategory ||
       typeof body.src !== "string" ||
       !/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(body.src)
     )

@@ -7,10 +7,12 @@ export default function ResultPoster({
   event,
   categoryLabel,
   templateUrl = "/hi-zone-poster.jpg",
+  uploadedPosterUrl,
 }: {
   event: Event;
   categoryLabel?: string;
   templateUrl?: string;
+  uploadedPosterUrl?: string;
 }) {
   const [pages, setPages] = useState<string[]>([]),
     [busy, setBusy] = useState(false),
@@ -21,6 +23,19 @@ export default function ResultPoster({
     setError("");
   }, [event.id, event.name, event.type, categoryLabel, templateUrl, snapshot]);
   if (!event.published || event.zone === "GENERAL") return null;
+  if (uploadedPosterUrl)
+    return (
+      <section className="result-poster uploaded-result-poster">
+        <img src={uploadedPosterUrl} alt={`${event.name} result poster`} />
+        <a
+          className="btn"
+          href={uploadedPosterUrl}
+          download={`${event.name.replace(/[^a-z0-9]+/gi, "-")}-result.png`}
+        >
+          <Download size={16} /> Download Result Poster
+        </a>
+      </section>
+    );
   async function generate() {
     setBusy(true);
     setError("");
@@ -72,8 +87,59 @@ export default function ResultPoster({
         const textX = customTemplate ? 300 : 582;
         const firstRowY = customTemplate ? 655 : 580;
         const rowGap = customTemplate ? 75 : 88;
-        ctx.fillStyle = customTemplate ? "rgba(10,20,18,.88)" : "#111111";
-        ctx.fillRect(headerX, headerY, customTemplate ? 600 : 550, 95);
+        const cleanWithTemplateBackground = (
+          x: number,
+          y: number,
+          width: number,
+          height: number,
+          sourceY = 330,
+        ) => {
+          ctx.save();
+          ctx.filter = "blur(7px)";
+          ctx.drawImage(
+            img,
+            x,
+            sourceY,
+            width,
+            height,
+            x - 5,
+            y - 5,
+            width + 10,
+            height + 10,
+          );
+          ctx.restore();
+        };
+        const coloursForArea = (
+          x: number,
+          y: number,
+          width: number,
+          height: number,
+        ) => {
+          try {
+            const pixels = ctx.getImageData(x, y, width, height).data;
+            let light = 0;
+            let samples = 0;
+            for (let i = 0; i < pixels.length; i += 64) {
+              light +=
+                pixels[i] * 0.2126 +
+                pixels[i + 1] * 0.7152 +
+                pixels[i + 2] * 0.0722;
+              samples++;
+            }
+            const average = light / Math.max(samples, 1);
+            return average > 145
+              ? { main: "#07120f", sub: "#173b32", accent: "#075f4c" }
+              : { main: "#ffffff", sub: "#e8eeee", accent: "#91e2bd" };
+          } catch {
+            return { main: "#ffffff", sub: "#eeeeee", accent: "#91cd79" };
+          }
+        };
+        if (customTemplate)
+          cleanWithTemplateBackground(headerX, headerY, 600, 95);
+        else {
+          ctx.fillStyle = "#111111";
+          ctx.fillRect(headerX, headerY, 550, 95);
+        }
         const write = (
           value: string,
           x: number,
@@ -93,20 +159,37 @@ export default function ResultPoster({
           ctx.fillText(value, x, y, width);
         };
         if (event.resultNumber) {
-          ctx.fillStyle = "rgba(10,10,10,.82)";
-          ctx.fillRect(680, 105, 270, 58);
           ctx.textAlign = "center";
-          write(
-            `RESULT #${event.resultNumber}`,
-            815,
-            144,
-            235,
-            25,
-            "#ffffff",
-            700,
-          );
+          if (customTemplate) {
+            const numberText = `RESULT #${event.resultNumber}`;
+            ctx.font = "700 25px aguda, Arial, sans-serif";
+            ctx.lineWidth = 6;
+            ctx.lineJoin = "round";
+            ctx.strokeStyle = "rgba(0,0,0,.78)";
+            ctx.strokeText(numberText, 815, 144, 235);
+            ctx.fillStyle = "#ffffff";
+            ctx.fillText(numberText, 815, 144, 235);
+          } else {
+            ctx.fillStyle = "rgba(10,10,10,.82)";
+            ctx.fillRect(680, 105, 270, 58);
+            write(
+              `RESULT #${event.resultNumber}`,
+              815,
+              144,
+              235,
+              25,
+              "#ffffff",
+              700,
+            );
+          }
           ctx.textAlign = "left";
         }
+        const headerColours = coloursForArea(
+          headerX,
+          headerY,
+          customTemplate ? 600 : 550,
+          95,
+        );
         write(
           categoryLabel ||
             (event.zone === "HI_ZONE_INTER"
@@ -116,7 +199,7 @@ export default function ResultPoster({
           customTemplate ? 552 : 478,
           customTemplate ? 550 : 510,
           21,
-          "#91cd79",
+          headerColours.accent,
         );
         write(
           event.name.toUpperCase(),
@@ -124,21 +207,35 @@ export default function ResultPoster({
           customTemplate ? 592 : 514,
           customTemplate ? 550 : 510,
           32,
-          "#2fa58f",
+          headerColours.main,
           700,
         );
         posterRows[page].forEach((r, i) => {
           const cy = firstRowY + i * rowGap;
           // If this rank was not awarded, cover its complete template slot,
           // including the baked-in rank marker. Do not show "Not announced".
-          ctx.fillStyle = customTemplate ? "rgba(10,20,18,.94)" : "#111111";
-          ctx.fillRect(
-            r ? (customTemplate ? 275 : 570) : customTemplate ? 205 : 480,
-            cy - 35,
-            r ? (customTemplate ? 600 : 465) : customTemplate ? 670 : 555,
-            65,
-          );
+          const coverX = r
+            ? customTemplate
+              ? 275
+              : 570
+            : customTemplate
+              ? 205
+              : 480;
+          const coverWidth = r
+            ? customTemplate
+              ? 600
+              : 465
+            : customTemplate
+              ? 670
+              : 555;
+          if (customTemplate)
+            cleanWithTemplateBackground(coverX, cy - 35, coverWidth, 65);
+          else {
+            ctx.fillStyle = "#111111";
+            ctx.fillRect(coverX, cy - 35, coverWidth, 65);
+          }
           if (!r) return;
+          const rowColours = coloursForArea(coverX, cy - 35, coverWidth, 65);
           ctx.textAlign = "left";
           write(
             r.name.toUpperCase(),
@@ -146,7 +243,7 @@ export default function ResultPoster({
             cy,
             customTemplate ? 550 : 438,
             26,
-            "#ffffff",
+            rowColours.main,
             700,
           );
           write(
@@ -155,7 +252,7 @@ export default function ResultPoster({
             cy + 22,
             customTemplate ? 550 : 438,
             16,
-            "#eeeeee",
+            rowColours.sub,
           );
         });
         if (posterRows.length > 1)
