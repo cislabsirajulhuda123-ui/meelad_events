@@ -79,14 +79,15 @@ export default function ResultPoster({
         if (!ctx)
           throw Error("Poster download is unavailable in this browser.");
         ctx.drawImage(img, 0, 0, 1080, 1080);
-        // Cover only the sample words. The template's existing 1/2/3 artwork
-        // stays visible and becomes the rank marker for the generated result.
+        // Uploaded drafts often contain a complete sample result. Put the live
+        // result on one clean, template-coloured panel so none of that sample
+        // copy can show through or collide with the real names.
         const customTemplate = templateUrl !== "/hi-zone-poster.jpg";
-        const headerX = customTemplate ? 275 : 480;
-        const headerY = customTemplate ? 520 : 440;
-        const textX = customTemplate ? 300 : 582;
+        const headerX = customTemplate ? 245 : 480;
+        const headerY = customTemplate ? 500 : 440;
+        const textX = customTemplate ? 355 : 582;
         const firstRowY = customTemplate ? 655 : 580;
-        const rowGap = customTemplate ? 75 : 88;
+        const rowGap = customTemplate ? 82 : 88;
         const cleanWithTemplateBackground = (
           x: number,
           y: number,
@@ -134,9 +135,20 @@ export default function ResultPoster({
             return { main: "#ffffff", sub: "#eeeeee", accent: "#91cd79" };
           }
         };
-        if (customTemplate)
-          cleanWithTemplateBackground(headerX, headerY, 600, 95);
-        else {
+        if (customTemplate) {
+          // A single panel is deliberately used instead of three small patches:
+          // it also hides baked-in headings, team names and decorative labels.
+          const panelGradient = ctx.createLinearGradient(245, 490, 865, 880);
+          panelGradient.addColorStop(0, "rgba(4, 55, 47, .90)");
+          panelGradient.addColorStop(1, "rgba(2, 31, 28, .94)");
+          ctx.fillStyle = panelGradient;
+          ctx.beginPath();
+          ctx.roundRect(245, 490, 620, 390, 24);
+          ctx.fill();
+          ctx.strokeStyle = "rgba(255, 221, 72, .34)";
+          ctx.lineWidth = 2;
+          ctx.stroke();
+        } else {
           ctx.fillStyle = "#111111";
           ctx.fillRect(headerX, headerY, 550, 95);
         }
@@ -195,17 +207,17 @@ export default function ResultPoster({
             (event.zone === "HI_ZONE_INTER"
               ? "High School · Inter Campus"
               : "High School"),
-          customTemplate ? 300 : 495,
-          customTemplate ? 552 : 478,
-          customTemplate ? 550 : 510,
+          customTemplate ? 285 : 495,
+          customTemplate ? 535 : 478,
+          customTemplate ? 540 : 510,
           21,
           headerColours.accent,
         );
         write(
           event.name.toUpperCase(),
-          customTemplate ? 300 : 495,
-          customTemplate ? 592 : 514,
-          customTemplate ? 550 : 510,
+          customTemplate ? 285 : 495,
+          customTemplate ? 580 : 514,
+          customTemplate ? 540 : 510,
           32,
           headerColours.main,
           700,
@@ -228,20 +240,23 @@ export default function ResultPoster({
             : customTemplate
               ? 670
               : 555;
-          if (customTemplate)
-            cleanWithTemplateBackground(coverX, cy - 35, coverWidth, 65);
-          else {
+          if (!customTemplate) {
             ctx.fillStyle = "#111111";
             ctx.fillRect(coverX, cy - 35, coverWidth, 65);
           }
           if (!r) return;
           const rowColours = coloursForArea(coverX, cy - 35, coverWidth, 65);
           ctx.textAlign = "left";
+          if (customTemplate) {
+            ctx.textAlign = "center";
+            write(String(i + 1), 300, cy + 10, 55, 43, "#f6d849", 700);
+            ctx.textAlign = "left";
+          }
           write(
             r.name.toUpperCase(),
             textX,
             cy,
-            customTemplate ? 550 : 438,
+            customTemplate ? 465 : 438,
             26,
             rowColours.main,
             700,
@@ -250,7 +265,7 @@ export default function ResultPoster({
             "TEAM " + r.team.toUpperCase(),
             textX,
             cy + 22,
-            customTemplate ? 550 : 438,
+            customTemplate ? 465 : 438,
             16,
             rowColours.sub,
           );
@@ -258,8 +273,8 @@ export default function ResultPoster({
         if (posterRows.length > 1)
           write(
             `PAGE ${page + 1} / ${posterRows.length}`,
-            customTemplate ? 300 : 495,
-            customTemplate ? 875 : 828,
+            customTemplate ? 285 : 495,
+            customTemplate ? 855 : 828,
             customTemplate ? 550 : 510,
             14,
             "#aaaaaa",
