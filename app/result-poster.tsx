@@ -87,11 +87,47 @@ export default function ResultPoster({
         const customTemplate = templateUrl !== "/hi-zone-poster.jpg";
         const stampModel =
           customTemplate && img.naturalWidth / img.naturalHeight < 0.985;
-        const headerX = customTemplate ? (stampModel ? 220 : 430) : 480;
-        const headerY = customTemplate ? (stampModel ? 330 : 430) : 440;
-        const textX = customTemplate ? (stampModel ? 315 : 535) : 582;
-        const firstRowY = customTemplate ? (stampModel ? 545 : 565) : 580;
-        const rowGap = customTemplate ? (stampModel ? 84 : 79) : 88;
+        const corner = ctx.getImageData(35, 35, 1, 1).data;
+        const greenModel =
+          customTemplate &&
+          !stampModel &&
+          corner[1] > corner[0] * 1.35 &&
+          corner[1] > corner[2] * 1.08;
+        const headerX = customTemplate
+          ? stampModel
+            ? 220
+            : greenModel
+              ? 205
+              : 430
+          : 480;
+        const headerY = customTemplate
+          ? stampModel
+            ? 330
+            : greenModel
+              ? 500
+              : 430
+          : 440;
+        const textX = customTemplate
+          ? stampModel
+            ? 315
+            : greenModel
+              ? 300
+              : 535
+          : 582;
+        const firstRowY = customTemplate
+          ? stampModel
+            ? 545
+            : greenModel
+              ? 675
+              : 565
+          : 580;
+        const rowGap = customTemplate
+          ? stampModel
+            ? 84
+            : greenModel
+              ? 72
+              : 79
+          : 88;
         const cleanWithTemplateBackground = (
           x: number,
           y: number,
@@ -149,6 +185,15 @@ export default function ResultPoster({
             ctx.lineTo(218, 845);
             ctx.closePath();
             ctx.fill();
+          } else if (greenModel) {
+            // Rebuild the green model's text zone without adding a visible
+            // card. This hides the baked-in sample result while preserving
+            // the surrounding artwork and its original left alignment.
+            const green = ctx.createLinearGradient(200, 480, 710, 850);
+            green.addColorStop(0, "#0c5b4d");
+            green.addColorStop(1, "#08483e");
+            ctx.fillStyle = green;
+            ctx.fillRect(200, 480, 510, 370);
           } else {
             ctx.fillStyle = "#111111";
             ctx.fillRect(430, 410, 455, 405);
@@ -177,7 +222,20 @@ export default function ResultPoster({
         };
         if (event.resultNumber) {
           ctx.textAlign = "center";
-          if (customTemplate) {
+          if (customTemplate && greenModel) {
+            ctx.fillStyle = "#0c594b";
+            ctx.fillRect(205, 270, 205, 210);
+            write(
+              event.resultNumber.padStart(2, "0"),
+              307,
+              430,
+              180,
+              175,
+              "#ffffff",
+              700,
+            );
+            write("RESULT", 307, 465, 120, 22, "#e8c83e", 700);
+          } else if (customTemplate) {
             const numberText = `RESULT #${event.resultNumber}`;
             ctx.font = "700 25px aguda, Arial, sans-serif";
             ctx.lineWidth = 6;
@@ -212,19 +270,23 @@ export default function ResultPoster({
             (event.zone === "HI_ZONE_INTER"
               ? "High School · Inter Campus"
               : "High School"),
-          customTemplate ? (stampModel ? 275 : 535) : 495,
-          customTemplate ? (stampModel ? 390 : 465) : 478,
-          customTemplate ? (stampModel ? 520 : 315) : 510,
+          customTemplate ? (stampModel ? 275 : greenModel ? 300 : 535) : 495,
+          customTemplate ? (stampModel ? 390 : greenModel ? 535 : 465) : 478,
+          customTemplate ? (stampModel ? 520 : greenModel ? 380 : 315) : 510,
           21,
           headerColours.accent,
         );
+        if (greenModel) {
+          ctx.fillStyle = "#f1d12f";
+          ctx.fillRect(215, 555, 485, 48);
+        }
         write(
           event.name.toUpperCase(),
-          customTemplate ? (stampModel ? 275 : 535) : 495,
-          customTemplate ? (stampModel ? 435 : 505) : 514,
-          customTemplate ? (stampModel ? 520 : 315) : 510,
+          customTemplate ? (stampModel ? 275 : greenModel ? 225 : 535) : 495,
+          customTemplate ? (stampModel ? 435 : greenModel ? 590 : 505) : 514,
+          customTemplate ? (stampModel ? 520 : greenModel ? 470 : 315) : 510,
           customTemplate && !stampModel ? 27 : 32,
-          headerColours.main,
+          greenModel ? "#111111" : headerColours.main,
           700,
         );
         posterRows[page].forEach((r, i) => {
@@ -256,11 +318,11 @@ export default function ResultPoster({
             ctx.textAlign = "center";
             write(
               stampModel ? String(i + 1) : String(i + 1).padStart(2, "0"),
-              stampModel ? 265 : 465,
+              stampModel ? 265 : greenModel ? 250 : 465,
               cy + 10,
-              stampModel ? 40 : 55,
-              stampModel ? 35 : 24,
-              stampModel ? "#ffffff" : "#f6d849",
+              stampModel ? 40 : greenModel ? 45 : 55,
+              stampModel ? 35 : greenModel ? 30 : 24,
+              stampModel || greenModel ? "#ffffff" : "#f6d849",
               700,
             );
             ctx.textAlign = "left";
@@ -269,7 +331,7 @@ export default function ResultPoster({
             r.name.toUpperCase(),
             textX,
             cy,
-            customTemplate ? (stampModel ? 500 : 330) : 438,
+            customTemplate ? (stampModel ? 500 : greenModel ? 390 : 330) : 438,
             26,
             rowColours.main,
             700,
@@ -278,9 +340,9 @@ export default function ResultPoster({
             "TEAM " + r.team.toUpperCase(),
             textX,
             cy + 22,
-            customTemplate ? (stampModel ? 500 : 330) : 438,
+            customTemplate ? (stampModel ? 500 : greenModel ? 390 : 330) : 438,
             16,
-            rowColours.sub,
+            greenModel ? "#f1d12f" : rowColours.sub,
           );
         });
         if (posterRows.length > 1)
