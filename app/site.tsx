@@ -423,7 +423,7 @@ function FestivalSite({
   view: string;
   eventId?: string;
 }) {
-  const scheduleAutoScrolled = useRef(false);
+  const lastScheduleScroll = useRef<"Stage" | "Off-Stage" | null>(null);
   const [data, setData] = useState(initial),
     [query, setQuery] = useState(""),
     [zone, setZone] = useState(view === "standings" ? "OVERALL" : "ALL"),
@@ -463,20 +463,19 @@ function FestivalSite({
     };
   }, []);
   useEffect(() => {
-    if (view !== "schedule" || scheduleAutoScrolled.current) return;
-    const liveEvent = data.events.find(
-      (item) => item.scheduleStatus === "LIVE",
-    );
-    if (!liveEvent) return;
-    scheduleAutoScrolled.current = true;
-    setScheduleCategory(liveEvent.category);
+    if (view !== "schedule" || lastScheduleScroll.current === scheduleCategory)
+      return;
+    lastScheduleScroll.current = scheduleCategory;
     const timer = window.setTimeout(() => {
-      document
-        .querySelector('[data-live-schedule="true"]')
-        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+      const section = document.querySelector("[data-schedule-list]");
+      const priority =
+        section?.querySelector('[data-schedule-status="LIVE"]') ||
+        section?.querySelector('[data-schedule-status="REGISTRATION"]') ||
+        section;
+      priority?.scrollIntoView({ behavior: "smooth", block: "center" });
     }, 180);
     return () => window.clearTimeout(timer);
-  }, [data.events, view]);
+  }, [scheduleCategory, view]);
   const { settings } = data;
   const categoryNames = { ...zones, ...data.categoryLabels };
   const filtered = data.events.filter(
@@ -948,7 +947,7 @@ function FestivalSite({
                   </button>
                 ))}
               </div>
-              <section className="schedule-section">
+              <section className="schedule-section" data-schedule-list>
                 <h2>{scheduleCategory} Events</h2>
                 <div className="events schedule-list">
                   {[...data.events]
@@ -975,12 +974,16 @@ function FestivalSite({
                       ).find((r) => r.id === item.pinnedTopScorerId);
                       return (
                         <a
-                          className="card event-card"
+                          className={`card event-card ${
+                            item.scheduleStatus === "LIVE"
+                              ? "is-live"
+                              : item.scheduleStatus === "REGISTRATION"
+                                ? "is-registration"
+                                : ""
+                          }`}
                           key={item.id}
                           href={"/results/" + item.id}
-                          data-live-schedule={
-                            item.scheduleStatus === "LIVE" || undefined
-                          }
+                          data-schedule-status={item.scheduleStatus}
                         >
                           <div className="split">
                             <span

@@ -1668,6 +1668,20 @@ textarea {
   width: 100%;
   box-sizing: border-box;
 }
+.schedule-list .event-card.is-live {
+  border-color: #1677ff88;
+  box-shadow:
+    0 0 0 1px #1677ff22,
+    0 12px 34px #1677ff1f;
+  animation: live-card-motion 2.2s ease-in-out infinite;
+}
+.schedule-list .event-card.is-registration {
+  border-color: #31d36b77;
+  box-shadow:
+    0 0 0 1px #31d36b1f,
+    0 12px 34px #31d36b17;
+  animation: registration-card-motion 2.5s ease-in-out infinite;
+}
 .schedule-list .event-card h3 {
   margin: 16px 0 5px;
 }
@@ -1718,6 +1732,32 @@ textarea {
   }
   50% {
     transform: translateY(-4px);
+  }
+}
+@keyframes live-card-motion {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+@keyframes registration-card-motion {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-3px) scale(1.003);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .schedule-list .event-card.is-live,
+  .schedule-list .event-card.is-registration,
+  .status-live,
+  .status-registration {
+    animation: none;
   }
 }
 .admin-tabs {
