@@ -36,6 +36,7 @@ import PosterEditor from "./poster-editor";
 import ScheduleEditor from "./schedule-editor";
 import RegistrationPortal from "../sub-admin/ui";
 import EventPosterUpload from "./event-poster-upload";
+import LogoUpload from "./logo-upload";
 export default function Admin({
   initial,
   initialRevision,
@@ -207,7 +208,9 @@ export default function Admin({
         <div className="container split">
           <a className="brand" href="/">
             <img
-              src="/meelad-logo.webp"
+              src={
+                data.content["image:/meelad-logo.webp"] || "/meelad-logo.webp"
+              }
               width="58"
               height="58"
               alt="Meelad Kunduthode"
@@ -729,6 +732,7 @@ export default function Admin({
               <section className="card admin-section">
                 <h2>Site settings</h2>
                 <p>Save changes to update the public website.</p>
+                <LogoUpload data={data} change={change} />
                 <div className="form-grid">
                   {Object.entries({
                     name: "Festival name",

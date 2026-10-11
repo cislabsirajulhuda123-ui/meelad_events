@@ -159,23 +159,49 @@ export default function HomeEditor({
             onChange={(e) => setText(selected, e.target.value)}
           />
           {!selected.startsWith("image:") && (
-            <div className="button-row visual-colour-row">
-              <label>
-                Text colour
-                <input
-                  type="color"
-                  value={data.content[`color:${selected}`] || "#ffffff"}
-                  onChange={(e) => setText(`color:${selected}`, e.target.value)}
-                />
-              </label>
-              <button
-                type="button"
-                className="btn outline small"
-                onClick={() => resetValue(`color:${selected}`)}
-              >
-                Reset colour
-              </button>
-            </div>
+            <>
+              <div className="button-row visual-colour-row">
+                <label>
+                  Text colour
+                  <input
+                    type="color"
+                    value={data.content[`color:${selected}`] || "#ffffff"}
+                    onChange={(e) =>
+                      setText(`color:${selected}`, e.target.value)
+                    }
+                  />
+                </label>
+                <button
+                  type="button"
+                  className="btn outline small"
+                  onClick={() => resetValue(`color:${selected}`)}
+                >
+                  Reset colour
+                </button>
+              </div>
+              <div className="button-row visual-colour-row">
+                <label>
+                  Text size (px)
+                  <input
+                    type="number"
+                    min="8"
+                    max="240"
+                    placeholder="Default"
+                    value={data.content[`font-size:${selected}`] || ""}
+                    onChange={(e) =>
+                      setText(`font-size:${selected}`, e.target.value)
+                    }
+                  />
+                </label>
+                <button
+                  type="button"
+                  className="btn outline small"
+                  onClick={() => resetValue(`font-size:${selected}`)}
+                >
+                  Reset size
+                </button>
+              </div>
+            </>
           )}
           <div className="visual-position-grid">
             <label>

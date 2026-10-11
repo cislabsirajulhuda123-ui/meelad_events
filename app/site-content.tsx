@@ -75,17 +75,19 @@ export function SiteText({ value }: { value: string }) {
     active = useVisualEditor();
   const shown = content[value] ?? value,
     color = content[`color:${value}`],
+    fontSize = Number(content[`font-size:${value}`] || 0),
     hidden = content[`hidden:${value}`] === "1",
     x = Number(content[`position-x:${value}`] || 0),
     y = Number(content[`position-y:${value}`] || 0);
   if (hidden && !active) return null;
-  return active || color || x || y || hidden ? (
+  return active || color || fontSize || x || y || hidden ? (
     <span
       className={`${active ? "visual-edit-target" : ""}${hidden ? " visual-edit-hidden" : ""}`}
       style={{
         ...(color
           ? { color, WebkitTextFillColor: color, background: "none" }
           : {}),
+        ...(fontSize ? { fontSize: `${fontSize}px` } : {}),
         ...(x || y
           ? { position: "relative", left: `${x}px`, top: `${y}px` }
           : {}),

@@ -19,7 +19,8 @@ export async function POST(req: Request) {
     const validCategory =
       posterCategories.some((c) => c.key === body.category) ||
       (typeof body.category === "string" &&
-        /^event:[a-zA-Z0-9_-]{1,200}$/.test(body.category));
+        (/^event:[a-zA-Z0-9_-]{1,200}$/.test(body.category) ||
+          body.category === "site:logo"));
     if (
       !validCategory ||
       typeof body.src !== "string" ||
