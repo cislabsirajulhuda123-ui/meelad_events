@@ -733,6 +733,24 @@ export default function Admin({
                 <h2>Site settings</h2>
                 <p>Save changes to update the public website.</p>
                 <LogoUpload data={data} change={change} />
+                <label style={{ display: "grid", gap: 8, marginBottom: 18 }}>
+                  Browser tab name
+                  <input
+                    value={data.content["browser-title"] || data.settings.name}
+                    onChange={(e) =>
+                      change((d) => ({
+                        ...d,
+                        content: {
+                          ...d.content,
+                          "browser-title": e.target.value,
+                        },
+                      }))
+                    }
+                  />
+                  <small className="muted">
+                    This changes the name shown on the browser tab.
+                  </small>
+                </label>
                 <div className="form-grid">
                   {Object.entries({
                     name: "Festival name",
