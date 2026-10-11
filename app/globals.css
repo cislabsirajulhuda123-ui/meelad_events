@@ -510,6 +510,81 @@ h3 {
 .quick-actions .button-row {
   justify-content: center;
 }
+.home-active-heading,
+.home-status-column > h3 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+.home-active-heading h2 {
+  margin: 8px 0 0;
+}
+.home-status-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+  margin-top: 32px;
+}
+.home-status-column {
+  min-width: 0;
+}
+.home-status-column > h3 {
+  margin: 0 0 14px;
+}
+.home-status-column > h3 > span {
+  display: inline-flex;
+  padding: 7px 12px;
+  border-radius: 999px;
+  font:
+    700 11px/1 Arial,
+    sans-serif;
+  letter-spacing: 0.08em;
+}
+.home-status-column > h3 > b {
+  color: #797982;
+  font: 700 12px/1 monospace;
+}
+.home-status-list {
+  display: grid;
+  gap: 12px;
+}
+.home-status-list .event-card {
+  padding: 22px;
+}
+.home-status-list .event-card h3 {
+  margin: 14px 0;
+}
+.home-status-list .event-card.is-live {
+  border-color: #1677ff88;
+  box-shadow: 0 12px 34px #1677ff1c;
+  animation: live-card-motion 2.2s ease-in-out infinite;
+}
+.home-status-list .event-card.is-registration {
+  border-color: #31d36b77;
+  box-shadow: 0 12px 34px #31d36b17;
+  animation: registration-card-motion 2.5s ease-in-out infinite;
+}
+.home-status-empty {
+  min-height: 116px;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  border: 1px dashed #34373d;
+  border-radius: 14px;
+  color: #777983;
+  text-align: center;
+}
+.home-nav-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(180px, 1fr));
+  width: min(900px, 100%);
+  margin: 0 auto;
+}
+.home-nav-actions .btn {
+  width: 100%;
+  justify-content: center;
+}
 .grid3 {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -661,6 +736,8 @@ h3 {
   box-shadow: 0 10px 35px #0009;
 }
 footer {
+  position: relative;
+  z-index: 12;
   border-top: 1px solid #242424;
   padding: 50px 0 30px;
   background: #030303;
@@ -1085,6 +1162,17 @@ label .choice {
   .grid3,
   .grid2 {
     grid-template-columns: 1fr;
+  }
+  .home-status-columns {
+    grid-template-columns: 1fr;
+  }
+  .home-active-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .home-nav-actions {
+    grid-template-columns: 1fr;
+    width: min(280px, 100%);
   }
   .footer-grid {
     grid-template-columns: 1fr;

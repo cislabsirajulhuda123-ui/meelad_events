@@ -120,8 +120,12 @@ function startDrag(
         type: "home-visual-group-position",
         positions: memberStarts.map(({ member, key: memberKey }) => ({
           key: memberKey,
-          x: Number.parseFloat(member.style.left) || 0,
-          y: Number.parseFloat(member.style.top) || 0,
+          xPercent:
+            ((Number.parseFloat(member.style.left) || 0) / window.innerWidth) *
+            100,
+          yPercent:
+            ((Number.parseFloat(member.style.top) || 0) / window.innerHeight) *
+            100,
         })),
       },
       window.location.origin,
@@ -147,8 +151,20 @@ export function SiteText({
     color = content[`color:${value}`],
     fontSize = Number(content[`font-size:${value}`] || 0),
     hidden = content[`hidden:${value}`] === "1",
-    x = locked ? 0 : Number(content[`position-x:${value}`] || 0),
-    y = locked ? 0 : Number(content[`position-y:${value}`] || 0);
+    xPercent = locked ? 0 : Number(content[`position-x-percent:${value}`] || 0),
+    yPercent = locked ? 0 : Number(content[`position-y-percent:${value}`] || 0),
+    legacyX = locked ? 0 : Number(content[`position-x:${value}`] || 0),
+    legacyY = locked ? 0 : Number(content[`position-y:${value}`] || 0),
+    x = xPercent
+      ? (xPercent *
+          (typeof window === "undefined" ? 1366 : window.innerWidth)) /
+        100
+      : legacyX,
+    y = yPercent
+      ? (yPercent *
+          (typeof window === "undefined" ? 768 : window.innerHeight)) /
+        100
+      : legacyY;
   if (hidden && !active) return null;
   return active || color || fontSize || x || y || hidden ? (
     <span
@@ -163,7 +179,11 @@ export function SiteText({
           : {}),
         ...(fontSize ? { fontSize: `${fontSize}px` } : {}),
         ...(x || y
-          ? { position: "relative", left: `${x}px`, top: `${y}px` }
+          ? {
+              position: "relative",
+              left: xPercent ? `${xPercent}vw` : `${legacyX}px`,
+              top: yPercent ? `${yPercent}vh` : `${legacyY}px`,
+            }
           : {}),
       }}
       title={
@@ -201,8 +221,20 @@ export function SiteImage(props: ImgHTMLAttributes<HTMLImageElement>) {
   const positionLocked = content[`locked:${key}`] === "1",
     visualGroup = content[`group:${key}`] || "",
     hidden = content[`hidden:${key}`] === "1",
-    x = Number(content[`position-x:${key}`] || 0),
-    y = Number(content[`position-y:${key}`] || 0);
+    xPercent = Number(content[`position-x-percent:${key}`] || 0),
+    yPercent = Number(content[`position-y-percent:${key}`] || 0),
+    legacyX = Number(content[`position-x:${key}`] || 0),
+    legacyY = Number(content[`position-y:${key}`] || 0),
+    x = xPercent
+      ? (xPercent *
+          (typeof window === "undefined" ? 1366 : window.innerWidth)) /
+        100
+      : legacyX,
+    y = yPercent
+      ? (yPercent *
+          (typeof window === "undefined" ? 768 : window.innerHeight)) /
+        100
+      : legacyY;
   if (hidden && !active) return null;
   return (
     <img
@@ -215,7 +247,11 @@ export function SiteImage(props: ImgHTMLAttributes<HTMLImageElement>) {
       style={{
         ...props.style,
         ...(x || y
-          ? { position: "relative", left: `${x}px`, top: `${y}px` }
+          ? {
+              position: "relative",
+              left: xPercent ? `${xPercent}vw` : `${legacyX}px`,
+              top: yPercent ? `${yPercent}vh` : `${legacyY}px`,
+            }
           : {}),
       }}
       title={

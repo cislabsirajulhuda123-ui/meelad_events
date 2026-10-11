@@ -593,18 +593,27 @@ function FestivalSite({
           </section>
           <div className="container">
             <section className="quick-actions" id="discover">
-              <div className="button-row">
-                <a className="btn" href="/standings">
-                  <Trophy size={18} />
-                  <SiteText value={"View Live Leaderboard"} />
-                </a>
+              <div className="button-row home-nav-actions">
+                {data.navigation
+                  .filter(
+                    (item) =>
+                      item.visible &&
+                      item.href !== "/" &&
+                      item.label !== "Home",
+                  )
+                  .map((item, index) => (
+                    <a
+                      className={index === 0 ? "btn" : "btn outline"}
+                      href={item.href}
+                      key={item.href + item.label}
+                    >
+                      <ArrowUpRight size={18} />
+                      <SiteText value={item.label} />
+                    </a>
+                  ))}
                 <a className="btn outline" href="/student">
                   <User size={18} />
                   <SiteText value={"Student Portal"} />
-                </a>
-                <a className="btn outline" href="/results">
-                  <Activity size={18} />
-                  <SiteText value={"Event Results"} />
                 </a>
               </div>
               <p className="eyebrow">
@@ -614,43 +623,75 @@ function FestivalSite({
                 <SiteText value={" EVENTS"} />
               </p>
             </section>
-            <section className="section grid2">
-              <div>
-                <h2>
-                  <SiteText value={"DECIMAL VOICES | "} />
-                  <span className="gradient">
-                    <SiteText value={"THE NEXT DECIMAL"} />
-                  </span>
-                </h2>
-                <p>
-                  <SiteText
-                    value={
-                      "The universe operates on absolute cosmic precision, not approximations. From galactic orbits to cellular differentiation, everything is controlled by microscopic measurements. Discover why the truth resides not in “rounding off” realities, but in the epistemic curiosity to search for the next decimal."
-                    }
-                  />
-                </p>
-                <a className="text-link" href="/concept">
-                  <SiteText value={"[0.004] Read Full Concept "} />
-                  <ArrowUpRight size={16} />
+            <section className="section home-active-events">
+              <div className="home-active-heading">
+                <div>
+                  <span className="eyebrow">HAPPENING NOW</span>
+                  <h2>
+                    LIVE &amp; <span className="gradient">REGISTRATION</span>
+                  </h2>
+                </div>
+                <a className="text-link" href="/schedule">
+                  Open full schedule <ArrowUpRight size={16} />
                 </a>
               </div>
-              <div className="card precision">
-                <div className="eyebrow">
-                  <SiteText value={"COSMIC PRECISION"} />
-                </div>
-                <strong className="gradient">
-                  <SiteText value={"0.000000001…"} />
-                </strong>
-                <blockquote>
-                  <SiteText
-                    value={
-                      "“Truth resides not in approximations, but in precision. Scroll less. Measure more.”"
-                    }
-                  />
-                </blockquote>
-                <span className="eyebrow">
-                  <SiteText value={"DECIMAL VOICES 2026"} />
-                </span>
+              <div className="home-status-columns">
+                {(["LIVE", "REGISTRATION"] as const).map((eventStatus) => {
+                  const activeEvents = data.events.filter(
+                    (item) => item.scheduleStatus === eventStatus,
+                  );
+                  return (
+                    <div className="home-status-column" key={eventStatus}>
+                      <h3>
+                        <span
+                          className={
+                            eventStatus === "LIVE"
+                              ? "status-live"
+                              : "status-registration"
+                          }
+                        >
+                          {eventStatus === "LIVE"
+                            ? "● LIVE"
+                            : "REGISTRATION OPEN"}
+                        </span>
+                        <b>{activeEvents.length}</b>
+                      </h3>
+                      <div className="home-status-list">
+                        {activeEvents.length ? (
+                          activeEvents.map((item) => (
+                            <a
+                              className={`card event-card ${
+                                eventStatus === "LIVE"
+                                  ? "is-live"
+                                  : "is-registration"
+                              }`}
+                              href="/schedule"
+                              key={item.id}
+                            >
+                              <div className="eyebrow">
+                                {item.category} ·{" "}
+                                {zones[item.zone] || item.zone}
+                              </div>
+                              <h3>{item.name}</h3>
+                              <small>
+                                <MapPin size={14} /> {item.venue || "Venue TBA"}
+                              </small>
+                              {item.scheduleAt && (
+                                <small>{item.scheduleAt}</small>
+                              )}
+                            </a>
+                          ))
+                        ) : (
+                          <div className="home-status-empty">
+                            {eventStatus === "LIVE"
+                              ? "No live programme now"
+                              : "No registration open now"}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </section>
             <section className="section">
@@ -1262,10 +1303,6 @@ function FestivalSite({
                 }
               />
             </p>
-            <span className="eyebrow">
-              <SiteText value={"ORIGINAL FESTIVAL ORGANIZER"} />
-            </span>
-            <SiteImage src="/hidalogo.webp" width="75" alt="HIDA" />
           </div>
           <div>
             <h3>

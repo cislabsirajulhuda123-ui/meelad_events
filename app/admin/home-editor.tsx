@@ -97,9 +97,11 @@ export default function HomeEditor({
             ...d.content,
             ...Object.fromEntries(
               event.data.positions.flatMap(
-                (item: { key: string; x: number; y: number }) => [
-                  [`position-x:${item.key}`, String(item.x)],
-                  [`position-y:${item.key}`, String(item.y)],
+                (item: { key: string; xPercent: number; yPercent: number }) => [
+                  [`position-x-percent:${item.key}`, String(item.xPercent)],
+                  [`position-y-percent:${item.key}`, String(item.yPercent)],
+                  [`position-x:${item.key}`, "0"],
+                  [`position-y:${item.key}`, "0"],
                 ],
               ),
             ),
@@ -175,7 +177,9 @@ export default function HomeEditor({
       })();
       for (const key of Object.keys(content))
         if (
-          /^(position-[xy]|color|font-size|hidden|locked|group):/.test(key) ||
+          /^(position-[xy](?:-percent)?|color|font-size|hidden|locked|group):/.test(
+            key,
+          ) ||
           key === "custom-home-text-ids" ||
           customIds.includes(key)
         )
@@ -278,31 +282,33 @@ export default function HomeEditor({
           )}
           <div className="visual-position-grid">
             <label>
-              Left / Right (X)
+              Left / Right (%)
               <input
                 type="number"
                 disabled={positionLocked}
-                value={data.content[`position-x:${selected}`] || "0"}
+                step="0.1"
+                value={data.content[`position-x-percent:${selected}`] || "0"}
                 onChange={(e) =>
-                  setText(`position-x:${selected}`, e.target.value)
+                  setText(`position-x-percent:${selected}`, e.target.value)
                 }
               />
             </label>
             <label>
-              Up / Down (Y)
+              Up / Down (%)
               <input
                 type="number"
                 disabled={positionLocked}
-                value={data.content[`position-y:${selected}`] || "0"}
+                step="0.1"
+                value={data.content[`position-y-percent:${selected}`] || "0"}
                 onChange={(e) =>
-                  setText(`position-y:${selected}`, e.target.value)
+                  setText(`position-y-percent:${selected}`, e.target.value)
                 }
               />
             </label>
           </div>
           <small>
-            X: positive = right, negative = left. Y: positive = down, negative =
-            up.
+            Responsive percentage: zoom/ screen size മാറിയാലും relative position
+            നിലനിൽക്കും. X: positive = right. Y: positive = down.
           </small>
           <div className="button-row">
             <button
@@ -347,6 +353,8 @@ export default function HomeEditor({
               onClick={() => {
                 resetValue(`position-x:${selected}`);
                 resetValue(`position-y:${selected}`);
+                resetValue(`position-x-percent:${selected}`);
+                resetValue(`position-y-percent:${selected}`);
               }}
             >
               Reset position
