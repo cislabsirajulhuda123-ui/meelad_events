@@ -47,6 +47,7 @@ export default function Admin({
     [revision, setRevision] = useState(initialRevision),
     [selected, setSelected] = useState(initial.events[0]?.id || ""),
     [query, setQuery] = useState(""),
+    [eventCategoryFilter, setEventCategoryFilter] = useState("ALL"),
     [busy, setBusy] = useState(false),
     [message, setMessage] = useState(""),
     [error, setError] = useState(""),
@@ -304,10 +305,19 @@ export default function Admin({
                       onChange={(e) => setQuery(e.target.value)}
                     />
                   </label>
+                  <Choice
+                    label="Filter events by category"
+                    value={eventCategoryFilter}
+                    onChange={setEventCategoryFilter}
+                    items={{ ALL: "All categories", ...categoryNames }}
+                  />
                   <div className="event-list">
                     {data.events
-                      .filter((e) =>
-                        e.name.toLowerCase().includes(query.toLowerCase()),
+                      .filter(
+                        (e) =>
+                          e.name.toLowerCase().includes(query.toLowerCase()) &&
+                          (eventCategoryFilter === "ALL" ||
+                            e.zone === eventCategoryFilter),
                       )
                       .map((e) => (
                         <button

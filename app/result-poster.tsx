@@ -93,6 +93,40 @@ export default function ResultPoster({
           !stampModel &&
           corner[1] > corner[0] * 1.35 &&
           corner[1] > corner[2] * 1.08;
+        const featheredGreenPatch = (
+          x: number,
+          y: number,
+          width: number,
+          height: number,
+        ) => {
+          const patch = document.createElement("canvas");
+          patch.width = width;
+          patch.height = height;
+          const p = patch.getContext("2d");
+          if (!p) return;
+          const colour = p.createLinearGradient(0, 0, width, height);
+          colour.addColorStop(0, "#0b6754");
+          colour.addColorStop(0.5, "#09604f");
+          colour.addColorStop(1, "#075244");
+          p.fillStyle = colour;
+          p.fillRect(0, 0, width, height);
+          p.globalCompositeOperation = "destination-in";
+          const horizontal = p.createLinearGradient(0, 0, width, 0);
+          horizontal.addColorStop(0, "rgba(0,0,0,0)");
+          horizontal.addColorStop(0.08, "#000");
+          horizontal.addColorStop(0.92, "#000");
+          horizontal.addColorStop(1, "rgba(0,0,0,0)");
+          p.fillStyle = horizontal;
+          p.fillRect(0, 0, width, height);
+          const vertical = p.createLinearGradient(0, 0, 0, height);
+          vertical.addColorStop(0, "rgba(0,0,0,0)");
+          vertical.addColorStop(0.06, "#000");
+          vertical.addColorStop(0.94, "#000");
+          vertical.addColorStop(1, "rgba(0,0,0,0)");
+          p.fillStyle = vertical;
+          p.fillRect(0, 0, width, height);
+          ctx.drawImage(patch, x, y);
+        };
         const headerX = customTemplate
           ? stampModel
             ? 220
@@ -189,11 +223,7 @@ export default function ResultPoster({
             // Rebuild the green model's text zone without adding a visible
             // card. This hides the baked-in sample result while preserving
             // the surrounding artwork and its original left alignment.
-            const green = ctx.createLinearGradient(200, 480, 710, 850);
-            green.addColorStop(0, "#0c5b4d");
-            green.addColorStop(1, "#08483e");
-            ctx.fillStyle = green;
-            ctx.fillRect(200, 480, 510, 370);
+            featheredGreenPatch(175, 470, 470, 400);
           } else {
             ctx.fillStyle = "#111111";
             ctx.fillRect(430, 410, 455, 405);
@@ -223,8 +253,7 @@ export default function ResultPoster({
         if (event.resultNumber) {
           ctx.textAlign = "center";
           if (customTemplate && greenModel) {
-            ctx.fillStyle = "#0c594b";
-            ctx.fillRect(205, 270, 205, 210);
+            featheredGreenPatch(180, 250, 255, 245);
             write(
               event.resultNumber.padStart(2, "0"),
               307,
@@ -317,7 +346,9 @@ export default function ResultPoster({
           if (customTemplate) {
             ctx.textAlign = "center";
             write(
-              stampModel ? String(i + 1) : String(i + 1).padStart(2, "0"),
+              stampModel || greenModel
+                ? String(i + 1)
+                : String(i + 1).padStart(2, "0"),
               stampModel ? 265 : greenModel ? 250 : 465,
               cy + 10,
               stampModel ? 40 : greenModel ? 45 : 55,
