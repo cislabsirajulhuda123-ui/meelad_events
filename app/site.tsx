@@ -581,10 +581,10 @@ function FestivalSite({
             </h1>
             <div className="hero-date-place">
               <span>
-                <SiteText value={"2027 · KUNDUTHODE"} locked />
+                <SiteText value={"2027 · KUNDUTHODE"} />
               </span>
               <small>
-                <SiteText value={"ORGANIZING SCHOOL NAME"} locked />
+                <SiteText value={"ORGANIZING SCHOOL NAME"} />
               </small>
             </div>
             <a className="scroll-cue" href="#discover">

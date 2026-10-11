@@ -138,10 +138,7 @@ export default function HomeEditor({
     });
     setSelected(id);
   };
-  const alwaysLocked =
-    selected === "2027 · KUNDUTHODE" || selected === "ORGANIZING SCHOOL NAME";
-  const positionLocked =
-    alwaysLocked || data.content[`locked:${selected}`] === "1";
+  const positionLocked = data.content[`locked:${selected}`] === "1";
   const selectedGroup = data.content[`group:${selected}`] || "";
   const createGroup = () => {
     if (groupSelection.length < 2) return;
@@ -327,9 +324,7 @@ export default function HomeEditor({
                 Ungroup this group
               </button>
             )}
-            {alwaysLocked ? (
-              <span className="badge">Position locked to hero title</span>
-            ) : positionLocked ? (
+            {positionLocked ? (
               <button
                 type="button"
                 className="btn small"
