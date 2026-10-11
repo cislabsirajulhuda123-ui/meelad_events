@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Festival } from "@/lib/model";
 
 const homeTexts = [
@@ -64,6 +64,20 @@ export default function HomeEditor({
   change: (fn: (data: Festival) => Festival) => void;
 }) {
   const [selected, setSelected] = useState("");
+  const [groupSelection, setGroupSelection] = useState<string[]>([]);
+  const previewFrame = useRef<HTMLIFrameElement>(null);
+  const sendPreview = () =>
+    previewFrame.current?.contentWindow?.postMessage(
+      {
+        type: "home-festival-preview",
+        festival: data,
+        content: data.content,
+      },
+      window.location.origin,
+    );
+  useEffect(() => {
+    sendPreview();
+  }, [data]);
   useEffect(() => {
     const receive = (event: MessageEvent) => {
       if (event.origin !== window.location.origin) return;
@@ -74,17 +88,21 @@ export default function HomeEditor({
         setSelected(event.data.key);
       }
       if (
-        event.data?.type === "home-visual-position" &&
-        typeof event.data.key === "string" &&
-        Number.isFinite(event.data.x) &&
-        Number.isFinite(event.data.y)
+        event.data?.type === "home-visual-group-position" &&
+        Array.isArray(event.data.positions)
       ) {
         change((d) => ({
           ...d,
           content: {
             ...d.content,
-            [`position-x:${event.data.key}`]: String(event.data.x),
-            [`position-y:${event.data.key}`]: String(event.data.y),
+            ...Object.fromEntries(
+              event.data.positions.flatMap(
+                (item: { key: string; x: number; y: number }) => [
+                  [`position-x:${item.key}`, String(item.x)],
+                  [`position-y:${item.key}`, String(item.y)],
+                ],
+              ),
+            ),
           },
         }));
       }
@@ -120,6 +138,56 @@ export default function HomeEditor({
     });
     setSelected(id);
   };
+  const alwaysLocked =
+    selected === "2027 · KUNDUTHODE" || selected === "ORGANIZING SCHOOL NAME";
+  const positionLocked =
+    alwaysLocked || data.content[`locked:${selected}`] === "1";
+  const selectedGroup = data.content[`group:${selected}`] || "";
+  const createGroup = () => {
+    if (groupSelection.length < 2) return;
+    const id = crypto.randomUUID();
+    change((d) => ({
+      ...d,
+      content: {
+        ...d.content,
+        ...Object.fromEntries(
+          groupSelection.map((key) => [`group:${key}`, id]),
+        ),
+      },
+    }));
+    setGroupSelection([]);
+  };
+  const ungroup = () =>
+    change((d) => {
+      const content = { ...d.content };
+      for (const [key, value] of Object.entries(content))
+        if (key.startsWith("group:") && value === selectedGroup)
+          delete content[key];
+      return { ...d, content };
+    });
+  const resetHome = () => {
+    if (!window.confirm("Reset the complete home visual layout?")) return;
+    change((d) => {
+      const content = { ...d.content };
+      const customIds: string[] = (() => {
+        try {
+          return JSON.parse(content["custom-home-text-ids"] || "[]");
+        } catch {
+          return [];
+        }
+      })();
+      for (const key of Object.keys(content))
+        if (
+          /^(position-[xy]|color|font-size|hidden|locked|group):/.test(key) ||
+          key === "custom-home-text-ids" ||
+          customIds.includes(key)
+        )
+          delete content[key];
+      return { ...d, content };
+    });
+    setSelected("");
+    setGroupSelection([]);
+  };
   return (
     <section className="card admin-section">
       <h2>Home page editor</h2>
@@ -134,9 +202,17 @@ export default function HomeEditor({
         <button type="button" className="btn small" onClick={addNewText}>
           + Add new text
         </button>
+        <button type="button" className="btn danger small" onClick={resetHome}>
+          Reset complete home screen
+        </button>
       </div>
       <div className="visual-home-editor">
-        <iframe title="Home page visual editor" src="/?visualEdit=1" />
+        <iframe
+          ref={previewFrame}
+          title="Home page visual editor"
+          src="/?visualEdit=1"
+          onLoad={sendPreview}
+        />
       </div>
       {selected && (
         <div className="card visual-selected-editor">
@@ -208,6 +284,7 @@ export default function HomeEditor({
               Left / Right (X)
               <input
                 type="number"
+                disabled={positionLocked}
                 value={data.content[`position-x:${selected}`] || "0"}
                 onChange={(e) =>
                   setText(`position-x:${selected}`, e.target.value)
@@ -218,6 +295,7 @@ export default function HomeEditor({
               Up / Down (Y)
               <input
                 type="number"
+                disabled={positionLocked}
                 value={data.content[`position-y:${selected}`] || "0"}
                 onChange={(e) =>
                   setText(`position-y:${selected}`, e.target.value)
@@ -230,6 +308,44 @@ export default function HomeEditor({
             up.
           </small>
           <div className="button-row">
+            <button
+              type="button"
+              className="btn outline small"
+              disabled={groupSelection.includes(selected)}
+              onClick={() => setGroupSelection((keys) => [...keys, selected])}
+            >
+              {groupSelection.includes(selected)
+                ? "Added to group selection"
+                : "Add to group selection"}
+            </button>
+            {selectedGroup && (
+              <button
+                type="button"
+                className="btn outline small"
+                onClick={ungroup}
+              >
+                Ungroup this group
+              </button>
+            )}
+            {alwaysLocked ? (
+              <span className="badge">Position locked to hero title</span>
+            ) : positionLocked ? (
+              <button
+                type="button"
+                className="btn small"
+                onClick={() => resetValue(`locked:${selected}`)}
+              >
+                Unlock position
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="btn outline small"
+                onClick={() => setText(`locked:${selected}`, "1")}
+              >
+                Lock position
+              </button>
+            )}
             <button
               type="button"
               className="btn outline small"
@@ -258,6 +374,28 @@ export default function HomeEditor({
               </button>
             )}
           </div>
+          {groupSelection.length > 0 && (
+            <div className="card">
+              <strong>{groupSelection.length} element(s) selected</strong>
+              <div className="button-row" style={{ marginTop: 10 }}>
+                <button
+                  type="button"
+                  className="btn small"
+                  disabled={groupSelection.length < 2}
+                  onClick={createGroup}
+                >
+                  Group selected elements
+                </button>
+                <button
+                  type="button"
+                  className="btn outline small"
+                  onClick={() => setGroupSelection([])}
+                >
+                  Clear selection
+                </button>
+              </div>
+            </div>
+          )}
           <p>മാറ്റം പൂർത്തിയായാൽ മുകളിലെ Save changes അമർത്തുക.</p>
         </div>
       )}

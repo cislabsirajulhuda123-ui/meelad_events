@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { loadFestival } from "@/lib/festival";
+import BrowserTitleSync from "./browser-title-sync";
 import "./globals.css";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -29,7 +30,10 @@ export default function RootLayout({
       <head>
         <link rel="stylesheet" href="/fonts.css" />
       </head>
-      <body>{children}</body>
+      <body>
+        <BrowserTitleSync />
+        {children}
+      </body>
     </html>
   );
 }

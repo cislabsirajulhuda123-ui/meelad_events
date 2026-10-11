@@ -448,6 +448,21 @@ function FestivalSite({
     }
   }
   useEffect(() => {
+    if (view !== "home") return;
+    const receivePreview = (event: MessageEvent) => {
+      if (
+        event.origin === window.location.origin &&
+        event.data?.type === "home-festival-preview" &&
+        event.data.festival
+      )
+        setData(event.data.festival as Festival);
+    };
+    window.addEventListener("message", receivePreview);
+    return () => window.removeEventListener("message", receivePreview);
+  }, [view]);
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("visualEdit") === "1")
+      return;
     const update = () => {
       if (!document.hidden) void refresh();
     };
@@ -558,20 +573,20 @@ function FestivalSite({
             <div className="hero-shade" aria-hidden="true" />
           </div>
           <section className="hero">
-            <div className="hero-date-place">
-              <span>
-                <SiteText value={"2027 · KUNDUTHODE"} />
-              </span>
-              <small>
-                <SiteText value={"ORGANIZING SCHOOL NAME"} />
-              </small>
-            </div>
             <h1>
               {settings.subtitle.split(" ").slice(0, -1).join(" ") || "ZARRAH"}{" "}
               <span className="gradient">
                 {settings.subtitle.split(" ").at(-1)}
               </span>
             </h1>
+            <div className="hero-date-place">
+              <span>
+                <SiteText value={"2027 · KUNDUTHODE"} locked />
+              </span>
+              <small>
+                <SiteText value={"ORGANIZING SCHOOL NAME"} locked />
+              </small>
+            </div>
             <a className="scroll-cue" href="#discover">
               <SiteText value={"SCROLL TO DISCOVER ↓"} />
             </a>

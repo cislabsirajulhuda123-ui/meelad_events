@@ -313,7 +313,7 @@ p {
 }
 .hero-date-place {
   position: absolute;
-  top: 20%;
+  top: calc(50% + clamp(58px, 7vw, 105px));
   left: 50%;
   transform: translateX(-50%);
   display: flex;
@@ -321,10 +321,8 @@ p {
   align-items: center;
   gap: 3px;
   padding: 8px 22px;
-  border: 1px solid #86f5f677;
-  border-radius: 14px;
-  background: #05070799;
-  backdrop-filter: blur(8px);
+  border: 0;
+  background: transparent;
   color: #e9ffff;
   font:
     500 clamp(11px, 1.2vw, 16px)/1.4 aguda,
@@ -1315,6 +1313,31 @@ textarea {
 }
 .visual-edit-target:active {
   cursor: grabbing !important;
+}
+.visual-alignment-guide {
+  position: fixed;
+  z-index: 99999;
+  pointer-events: none;
+  opacity: 0.38;
+  background: #86f5f6;
+  box-shadow: 0 0 8px #86f5f6aa;
+}
+.visual-alignment-guide.active {
+  opacity: 1;
+  background: #f4db4c;
+  box-shadow: 0 0 12px #f4db4ccc;
+}
+.visual-alignment-guide.vertical {
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+}
+.visual-alignment-guide.horizontal {
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
 }
 .custom-home-text-layer {
   position: absolute;

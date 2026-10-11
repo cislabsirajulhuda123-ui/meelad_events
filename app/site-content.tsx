@@ -16,7 +16,22 @@ export function ContentProvider({
   value: Record<string, string>;
   children: ReactNode;
 }) {
-  return <Context.Provider value={value}>{children}</Context.Provider>;
+  const [preview, setPreview] = useState(value);
+  useEffect(() => setPreview(value), [value]);
+  useEffect(() => {
+    const receive = (event: MessageEvent) => {
+      if (
+        event.origin === window.location.origin &&
+        event.data?.type === "home-visual-preview" &&
+        event.data.content &&
+        typeof event.data.content === "object"
+      )
+        setPreview(event.data.content as Record<string, string>);
+    };
+    window.addEventListener("message", receive);
+    return () => window.removeEventListener("message", receive);
+  }, []);
+  return <Context.Provider value={preview}>{children}</Context.Provider>;
 }
 function useVisualEditor() {
   const [active, setActive] = useState(false);
@@ -36,7 +51,7 @@ function select(key: string) {
   );
 }
 function startDrag(
-  event: ReactPointerEvent<HTMLSpanElement>,
+  event: ReactPointerEvent<HTMLElement>,
   key: string,
   startX: number,
   startY: number,
@@ -48,6 +63,25 @@ function startDrag(
   const originY = event.clientY;
   let latestX = startX;
   let latestY = startY;
+  const group = event.currentTarget.dataset.visualGroup;
+  const members = group
+    ? Array.from(
+        document.querySelectorAll<HTMLElement>(
+          `[data-visual-group="${group}"]`,
+        ),
+      )
+    : [element];
+  const memberStarts = members.map((member) => ({
+    member,
+    key: member.dataset.visualKey || key,
+    x: Number(member.dataset.visualX || 0),
+    y: Number(member.dataset.visualY || 0),
+  }));
+  const verticalGuide = document.createElement("div");
+  const horizontalGuide = document.createElement("div");
+  verticalGuide.className = "visual-alignment-guide vertical";
+  horizontalGuide.className = "visual-alignment-guide horizontal";
+  document.body.append(verticalGuide, horizontalGuide);
   element.setPointerCapture(event.pointerId);
   const move = (moveEvent: PointerEvent) => {
     latestX = Math.round(startX + moveEvent.clientX - originX);
@@ -55,13 +89,41 @@ function startDrag(
     element.style.position = "relative";
     element.style.left = `${latestX}px`;
     element.style.top = `${latestY}px`;
+    const rect = element.getBoundingClientRect();
+    const distanceX = window.innerWidth / 2 - (rect.left + rect.width / 2);
+    const distanceY = window.innerHeight / 2 - (rect.top + rect.height / 2);
+    verticalGuide.classList.toggle("active", Math.abs(distanceX) <= 10);
+    horizontalGuide.classList.toggle("active", Math.abs(distanceY) <= 10);
+    if (Math.abs(distanceX) <= 10) {
+      latestX += Math.round(distanceX);
+      element.style.left = `${latestX}px`;
+    }
+    if (Math.abs(distanceY) <= 10) {
+      latestY += Math.round(distanceY);
+    }
+    const deltaX = latestX - startX;
+    const deltaY = latestY - startY;
+    memberStarts.forEach(({ member, x, y }) => {
+      member.style.position = "relative";
+      member.style.left = `${x + deltaX}px`;
+      member.style.top = `${y + deltaY}px`;
+    });
   };
   const finish = () => {
     element.removeEventListener("pointermove", move);
     element.removeEventListener("pointerup", finish);
     element.removeEventListener("pointercancel", finish);
+    verticalGuide.remove();
+    horizontalGuide.remove();
     window.parent.postMessage(
-      { type: "home-visual-position", key, x: latestX, y: latestY },
+      {
+        type: "home-visual-group-position",
+        positions: memberStarts.map(({ member, key: memberKey }) => ({
+          key: memberKey,
+          x: Number.parseFloat(member.style.left) || 0,
+          y: Number.parseFloat(member.style.top) || 0,
+        })),
+      },
       window.location.origin,
     );
     select(key);
@@ -70,18 +132,30 @@ function startDrag(
   element.addEventListener("pointerup", finish);
   element.addEventListener("pointercancel", finish);
 }
-export function SiteText({ value }: { value: string }) {
+export function SiteText({
+  value,
+  locked = false,
+}: {
+  value: string;
+  locked?: boolean;
+}) {
   const content = useContext(Context),
     active = useVisualEditor();
+  const positionLocked = locked || content[`locked:${value}`] === "1";
+  const visualGroup = content[`group:${value}`] || "";
   const shown = content[value] ?? value,
     color = content[`color:${value}`],
     fontSize = Number(content[`font-size:${value}`] || 0),
     hidden = content[`hidden:${value}`] === "1",
-    x = Number(content[`position-x:${value}`] || 0),
-    y = Number(content[`position-y:${value}`] || 0);
+    x = locked ? 0 : Number(content[`position-x:${value}`] || 0),
+    y = locked ? 0 : Number(content[`position-y:${value}`] || 0);
   if (hidden && !active) return null;
   return active || color || fontSize || x || y || hidden ? (
     <span
+      data-visual-key={value}
+      data-visual-group={visualGroup || undefined}
+      data-visual-x={x}
+      data-visual-y={y}
       className={`${active ? "visual-edit-target" : ""}${hidden ? " visual-edit-hidden" : ""}`}
       style={{
         ...(color
@@ -92,9 +166,17 @@ export function SiteText({ value }: { value: string }) {
           ? { position: "relative", left: `${x}px`, top: `${y}px` }
           : {}),
       }}
-      title={active ? "Drag to move · Click to edit" : undefined}
+      title={
+        active
+          ? positionLocked
+            ? "Click to edit · Position locked"
+            : "Drag to move · Click to edit"
+          : undefined
+      }
       onPointerDown={
-        active ? (event) => startDrag(event, value, x, y) : undefined
+        active && !positionLocked
+          ? (event) => startDrag(event, value, x, y)
+          : undefined
       }
       onClick={
         active
@@ -116,13 +198,19 @@ export function SiteImage(props: ImgHTMLAttributes<HTMLImageElement>) {
   const content = useContext(Context),
     active = useVisualEditor();
   const key = "image:" + props.src;
-  const hidden = content[`hidden:${key}`] === "1",
+  const positionLocked = content[`locked:${key}`] === "1",
+    visualGroup = content[`group:${key}`] || "",
+    hidden = content[`hidden:${key}`] === "1",
     x = Number(content[`position-x:${key}`] || 0),
     y = Number(content[`position-y:${key}`] || 0);
   if (hidden && !active) return null;
   return (
     <img
       {...props}
+      data-visual-key={key}
+      data-visual-group={visualGroup || undefined}
+      data-visual-x={x}
+      data-visual-y={y}
       className={`${props.className || ""}${active ? " visual-edit-target" : ""}${hidden ? " visual-edit-hidden" : ""}`}
       style={{
         ...props.style,
@@ -130,6 +218,18 @@ export function SiteImage(props: ImgHTMLAttributes<HTMLImageElement>) {
           ? { position: "relative", left: `${x}px`, top: `${y}px` }
           : {}),
       }}
+      title={
+        active
+          ? positionLocked
+            ? "Click to edit · Position locked"
+            : "Drag to move · Click to edit"
+          : props.title
+      }
+      onPointerDown={
+        active && !positionLocked
+          ? (event) => startDrag(event, key, x, y)
+          : props.onPointerDown
+      }
       onClick={
         active
           ? (e) => {
