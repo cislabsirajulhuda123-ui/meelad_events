@@ -15,6 +15,9 @@ import {
   Search,
   ArrowLeft,
   Printer,
+  CalendarDays,
+  Medal,
+  Images,
 } from "lucide-react";
 import {
   Table,
@@ -50,6 +53,19 @@ const scheduleLabels = {
   LIVE: "Live",
   ENDED: "Ended",
 } as const;
+function HomeNavIcon({ href }: { href: string }) {
+  if (href.startsWith("/schedule")) return <CalendarDays size={18} />;
+  if (href.startsWith("/top-scorer")) return <Medal size={18} />;
+  if (href.startsWith("/standings")) return <Trophy size={18} />;
+  if (href.startsWith("/results")) return <Activity size={18} />;
+  if (href.includes("zones") || href.startsWith("/categories"))
+    return <Layers size={18} />;
+  if (href.startsWith("/gallery") || href.startsWith("/highlights"))
+    return <Images size={18} />;
+  if (href.startsWith("/concept")) return <BookOpen size={18} />;
+  if (href.startsWith("/brochure")) return <FileText size={18} />;
+  return <ArrowUpRight size={18} />;
+}
 export function Header({
   name = "MEELAD KUNDUTHODE",
   navigation = defaultNavigation,
@@ -594,27 +610,38 @@ function FestivalSite({
           <div className="container">
             <section className="quick-actions" id="discover">
               <div className="button-row home-nav-actions">
+                <a className="btn" href="/standings">
+                  <Trophy size={18} />
+                  <SiteText value={"View Live Leaderboard"} />
+                </a>
+                <a className="btn outline" href="/student">
+                  <User size={18} />
+                  <SiteText value={"Student Portal"} />
+                </a>
+                <a className="btn outline" href="/results">
+                  <Activity size={18} />
+                  <SiteText value={"Event Results"} />
+                </a>
                 {data.navigation
                   .filter(
                     (item) =>
                       item.visible &&
                       item.href !== "/" &&
-                      item.label !== "Home",
+                      item.label !== "Home" &&
+                      !item.href.startsWith("/standings") &&
+                      !item.href.startsWith("/results") &&
+                      !item.href.startsWith("/student"),
                   )
-                  .map((item, index) => (
+                  .map((item) => (
                     <a
-                      className={index === 0 ? "btn" : "btn outline"}
+                      className="btn outline"
                       href={item.href}
                       key={item.href + item.label}
                     >
-                      <ArrowUpRight size={18} />
+                      <HomeNavIcon href={item.href} />
                       <SiteText value={item.label} />
                     </a>
                   ))}
-                <a className="btn outline" href="/student">
-                  <User size={18} />
-                  <SiteText value={"Student Portal"} />
-                </a>
               </div>
               <p className="eyebrow">
                 {data.teams.length}
