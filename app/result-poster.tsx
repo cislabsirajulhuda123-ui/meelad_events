@@ -74,20 +74,24 @@ export default function ResultPoster({
       for (let page = 0; page < posterRows.length; page++) {
         const canvas = document.createElement("canvas");
         canvas.width = 1080;
-        canvas.height = 1080;
+        canvas.height = Math.round(
+          (1080 * img.naturalHeight) / img.naturalWidth,
+        );
         const ctx = canvas.getContext("2d");
         if (!ctx)
           throw Error("Poster download is unavailable in this browser.");
-        ctx.drawImage(img, 0, 0, 1080, 1080);
+        ctx.drawImage(img, 0, 0, 1080, canvas.height);
         // Uploaded drafts often contain a complete sample result. Put the live
         // result on one clean, template-coloured panel so none of that sample
         // copy can show through or collide with the real names.
         const customTemplate = templateUrl !== "/hi-zone-poster.jpg";
-        const headerX = customTemplate ? 245 : 480;
-        const headerY = customTemplate ? 500 : 440;
-        const textX = customTemplate ? 355 : 582;
-        const firstRowY = customTemplate ? 655 : 580;
-        const rowGap = customTemplate ? 82 : 88;
+        const stampModel =
+          customTemplate && img.naturalWidth / img.naturalHeight < 0.985;
+        const headerX = customTemplate ? (stampModel ? 220 : 430) : 480;
+        const headerY = customTemplate ? (stampModel ? 330 : 430) : 440;
+        const textX = customTemplate ? (stampModel ? 315 : 535) : 582;
+        const firstRowY = customTemplate ? (stampModel ? 545 : 565) : 580;
+        const rowGap = customTemplate ? (stampModel ? 84 : 79) : 88;
         const cleanWithTemplateBackground = (
           x: number,
           y: number,
@@ -136,18 +140,19 @@ export default function ResultPoster({
           }
         };
         if (customTemplate) {
-          // A single panel is deliberately used instead of three small patches:
-          // it also hides baked-in headings, team names and decorative labels.
-          const panelGradient = ctx.createLinearGradient(245, 490, 865, 880);
-          panelGradient.addColorStop(0, "rgba(4, 55, 47, .90)");
-          panelGradient.addColorStop(1, "rgba(2, 31, 28, .94)");
-          ctx.fillStyle = panelGradient;
-          ctx.beginPath();
-          ctx.roundRect(245, 490, 620, 390, 24);
-          ctx.fill();
-          ctx.strokeStyle = "rgba(255, 221, 72, .34)";
-          ctx.lineWidth = 2;
-          ctx.stroke();
+          if (stampModel) {
+            ctx.fillStyle = "#302d2b";
+            ctx.beginPath();
+            ctx.moveTo(220, 330);
+            ctx.lineTo(850, 315);
+            ctx.lineTo(868, 820);
+            ctx.lineTo(218, 845);
+            ctx.closePath();
+            ctx.fill();
+          } else {
+            ctx.fillStyle = "#111111";
+            ctx.fillRect(430, 410, 455, 405);
+          }
         } else {
           ctx.fillStyle = "#111111";
           ctx.fillRect(headerX, headerY, 550, 95);
@@ -207,18 +212,18 @@ export default function ResultPoster({
             (event.zone === "HI_ZONE_INTER"
               ? "High School · Inter Campus"
               : "High School"),
-          customTemplate ? 285 : 495,
-          customTemplate ? 535 : 478,
-          customTemplate ? 540 : 510,
+          customTemplate ? (stampModel ? 275 : 535) : 495,
+          customTemplate ? (stampModel ? 390 : 465) : 478,
+          customTemplate ? (stampModel ? 520 : 315) : 510,
           21,
           headerColours.accent,
         );
         write(
           event.name.toUpperCase(),
-          customTemplate ? 285 : 495,
-          customTemplate ? 580 : 514,
-          customTemplate ? 540 : 510,
-          32,
+          customTemplate ? (stampModel ? 275 : 535) : 495,
+          customTemplate ? (stampModel ? 435 : 505) : 514,
+          customTemplate ? (stampModel ? 520 : 315) : 510,
+          customTemplate && !stampModel ? 27 : 32,
           headerColours.main,
           700,
         );
@@ -249,14 +254,22 @@ export default function ResultPoster({
           ctx.textAlign = "left";
           if (customTemplate) {
             ctx.textAlign = "center";
-            write(String(i + 1), 300, cy + 10, 55, 43, "#f6d849", 700);
+            write(
+              stampModel ? String(i + 1) : String(i + 1).padStart(2, "0"),
+              stampModel ? 265 : 465,
+              cy + 10,
+              stampModel ? 40 : 55,
+              stampModel ? 35 : 24,
+              stampModel ? "#ffffff" : "#f6d849",
+              700,
+            );
             ctx.textAlign = "left";
           }
           write(
             r.name.toUpperCase(),
             textX,
             cy,
-            customTemplate ? 465 : 438,
+            customTemplate ? (stampModel ? 500 : 330) : 438,
             26,
             rowColours.main,
             700,
@@ -265,7 +278,7 @@ export default function ResultPoster({
             "TEAM " + r.team.toUpperCase(),
             textX,
             cy + 22,
-            customTemplate ? 465 : 438,
+            customTemplate ? (stampModel ? 500 : 330) : 438,
             16,
             rowColours.sub,
           );
@@ -273,9 +286,9 @@ export default function ResultPoster({
         if (posterRows.length > 1)
           write(
             `PAGE ${page + 1} / ${posterRows.length}`,
-            customTemplate ? 285 : 495,
-            customTemplate ? 855 : 828,
-            customTemplate ? 550 : 510,
+            customTemplate ? (stampModel ? 275 : 535) : 495,
+            customTemplate ? (stampModel ? 800 : 790) : 828,
+            customTemplate ? (stampModel ? 520 : 315) : 510,
             14,
             "#aaaaaa",
           );
