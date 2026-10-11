@@ -381,6 +381,7 @@ p {
   }
 }
 .hero h1 {
+  font-family: aguda, "Arial Black", Arial, sans-serif;
   font-size: clamp(44px, 8.5vw, 128px);
   font-weight: 900;
   letter-spacing: -0.065em;
