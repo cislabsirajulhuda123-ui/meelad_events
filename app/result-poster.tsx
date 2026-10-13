@@ -2,17 +2,20 @@
 import { useEffect, useState } from "react";
 import { Download } from "lucide-react";
 import type { Event, Result } from "@/lib/model";
+import ShareButton from "./share-button";
 
 export default function ResultPoster({
   event,
   categoryLabel,
   templateUrl = "/hi-zone-poster.jpg",
   uploadedPosterUrl,
+  shareText,
 }: {
   event: Event;
   categoryLabel?: string;
   templateUrl?: string;
   uploadedPosterUrl?: string;
+  shareText?: string;
 }) {
   const [pages, setPages] = useState<string[]>([]),
     [busy, setBusy] = useState(false),
@@ -27,13 +30,21 @@ export default function ResultPoster({
     return (
       <section className="result-poster uploaded-result-poster">
         <img src={uploadedPosterUrl} alt={`${event.name} result poster`} />
-        <a
-          className="btn"
-          href={uploadedPosterUrl}
-          download={`${event.name.replace(/[^a-z0-9]+/gi, "-")}-result.png`}
-        >
-          <Download size={16} /> Download Result Poster
-        </a>
+        <div className="button-row result-share-actions">
+          <a
+            className="btn"
+            href={uploadedPosterUrl}
+            download={`${event.name.replace(/[^a-z0-9]+/gi, "-")}-result.png`}
+          >
+            <Download size={16} /> Download Result Poster
+          </a>
+          <ShareButton
+            title={`${event.name} Result`}
+            text={shareText || "Check out this result from Meelad Kunduthode."}
+            fileUrl={uploadedPosterUrl}
+            fileName={`${event.name.replace(/[^a-z0-9]+/gi, "-")}-result.png`}
+          />
+        </div>
       </section>
     );
   async function generate() {
@@ -411,6 +422,10 @@ export default function ResultPoster({
             ? "Regenerate result poster"
             : "Download Result Poster"}
       </button>
+      <ShareButton
+        title={`${event.name} Result`}
+        text={shareText || "Check out this result from Meelad Kunduthode."}
+      />
       {error && (
         <p className="error" role="alert">
           {error}
@@ -433,6 +448,15 @@ export default function ResultPoster({
               >
                 Download PNG{pages.length > 1 ? ` · Page ${i + 1}` : ""}
               </a>
+              <ShareButton
+                title={`${event.name} Result`}
+                text={
+                  shareText || "Check out this result from Meelad Kunduthode."
+                }
+                fileUrl={url}
+                fileName={`${event.name.replace(/[^a-z0-9]+/gi, "-")}-result-${i + 1}.png`}
+                className="btn outline"
+              />
             </div>
           ))}
         </div>

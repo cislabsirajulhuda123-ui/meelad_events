@@ -37,6 +37,7 @@ import ScheduleEditor from "./schedule-editor";
 import RegistrationPortal from "../sub-admin/ui";
 import EventPosterUpload from "./event-poster-upload";
 import LogoUpload from "./logo-upload";
+import ShareEditor from "./share-editor";
 export default function Admin({
   initial,
   initialRevision,
@@ -282,6 +283,7 @@ export default function Admin({
               <TabsTrigger value="schedule">Schedule & Live</TabsTrigger>
               <TabsTrigger value="teams">Teams</TabsTrigger>
               <TabsTrigger value="posters">Poster drafts</TabsTrigger>
+              <TabsTrigger value="sharing">Share messages</TabsTrigger>
               <TabsTrigger value="settings">Site settings</TabsTrigger>
               <TabsTrigger value="content">All public pages</TabsTrigger>
               <TabsTrigger value="participants">Participants</TabsTrigger>
@@ -628,6 +630,9 @@ export default function Admin({
             </TabsContent>
             <TabsContent value="home">
               <HomeEditor data={data} change={change} />
+            </TabsContent>
+            <TabsContent value="sharing">
+              <ShareEditor data={data} change={change} />
             </TabsContent>
             <TabsContent value="schedule">
               <ScheduleEditor data={data} change={change} />

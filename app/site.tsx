@@ -958,6 +958,10 @@ function FestivalSite({
               <ResultPoster
                 event={event}
                 categoryLabel={categoryNames[event.zone]}
+                shareText={
+                  data.content[`share:result:${event.id}`] ||
+                  data.content["share:result-default"]
+                }
                 uploadedPosterUrl={data.content[`event-poster:${event.id}`]}
                 templateUrl={
                   (posterCategoryKey(event.zone) &&
@@ -1176,7 +1180,7 @@ function FestivalSite({
                     </a>
                   ))}
               </div>
-              <GalleryMedia />
+              <GalleryMedia content={data.content} />
               {!settings.galleryUrls && (
                 <p>
                   <SiteText

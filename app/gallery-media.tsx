@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { Download } from "lucide-react";
+import ShareButton from "./share-button";
 
 type GalleryItem = { id: string; title: string; kind: string };
 
@@ -50,7 +51,11 @@ export function HomeGalleryPreview({
   );
 }
 
-export default function GalleryMedia() {
+export default function GalleryMedia({
+  content = {},
+}: {
+  content?: Record<string, string>;
+}) {
   const { items, error } = useGalleryItems();
   return (
     <>
@@ -73,14 +78,27 @@ export default function GalleryMedia() {
               />
             )}
             <figcaption>{m.title}</figcaption>
-            <a
-              className="btn outline small"
-              href={`/api/gallery/${m.id}?download=1`}
-              download
-            >
-              <Download size={15} />
-              Download {m.kind === "photo" ? "Photo" : "Video"}
-            </a>
+            <div className="button-row gallery-share-actions">
+              <a
+                className="btn outline small"
+                href={`/api/gallery/${m.id}?download=1`}
+                download
+              >
+                <Download size={15} />
+                Download {m.kind === "photo" ? "Photo" : "Video"}
+              </a>
+              <ShareButton
+                title={m.title}
+                text={
+                  content[`share:gallery:${m.id}`] ||
+                  content["share:gallery-default"] ||
+                  "View this moment from Meelad Kunduthode."
+                }
+                url={`/api/gallery/${m.id}`}
+                fileUrl={`/api/gallery/${m.id}`}
+                fileName={`${m.title.replace(/[^a-z0-9]+/gi, "-")}.${m.kind === "photo" ? "jpg" : "mp4"}`}
+              />
+            </div>
           </figure>
         ))}
       </div>
