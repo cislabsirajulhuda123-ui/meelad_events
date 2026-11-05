@@ -1,0 +1,1 @@
+import{portalRole}from'@/lib/admin';import{redirect}from'next/navigation';import Invigilator from'./ui';export const dynamic='force-dynamic';export default async function Page(){if(!['admin','invigilator'].includes(await portalRole()||''))redirect('/invigilator/login');return <Invigilator/>}

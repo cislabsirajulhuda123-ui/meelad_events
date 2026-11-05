@@ -1,0 +1,1 @@
+import AuthForm from '@/app/admin/auth-form';export default function Page(){return <main className="auth-page"><div className="card"><h1>Result Controller</h1><p>Sign in to enter result drafts.</p><AuthForm role="result"/></div><a href="/">Public website</a></main>}

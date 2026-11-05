@@ -5,10 +5,12 @@ import { zones } from "@/lib/model";
 import { Choice } from "../ui";
 type Options = {
   registrationOpen: boolean;
+  stageRegistrationOpen: boolean;
+  offStageRegistrationOpen: boolean;
   canEdit: boolean;
   registrations: Registration[];
   teams: { id: string; name: string }[];
-  events: { id: string; name: string; zone: string }[];
+  events: { id: string; name: string; zone: string; category?: "Stage" | "Off-Stage" }[];
   categoryLabels: Record<string, string>;
 };
 export default function RegistrationPortal({
@@ -49,6 +51,7 @@ export default function RegistrationPortal({
     setForm({
       id: crypto.randomUUID(),
       name: "",
+      className: "",
       chest: "",
       teamId: data?.teams[0]?.id || "",
       zone: "HI_ZONE_CAMPUS",
@@ -171,22 +174,34 @@ export default function RegistrationPortal({
                     />
                   </label>
                   <label>
+                    Class / identification
+                    <input
+                      maxLength={100}
+                      value={form.className || ""}
+                      onChange={(e) =>
+                        setForm({ ...form, className: e.target.value })
+                      }
+                      placeholder="e.g. Class 8 A"
+                    />
+                  </label>
+                  <label>
                     Chest number
                     <input
                       required
+                      readOnly
                       maxLength={40}
                       value={form.chest}
-                      onChange={(e) =>
-                        setForm({ ...form, chest: e.target.value })
-                      }
+                      placeholder="Generated when saved"
+                      aria-describedby="chest-help"
                     />
+                    <small id="chest-help">Automatically assigned by the system.</small>
                   </label>
                   <label>
                     Team
                     <Choice
                       label="Participant team"
                       value={form.teamId}
-                      onChange={(v) => setForm({ ...form, teamId: v })}
+                      onChange={(v) => setForm({ ...form, teamId: v, chest: form.revision ? form.chest : "" })}
                       items={Object.fromEntries(
                         data.teams.map((t) => [t.id, t.name]),
                       )}
@@ -204,10 +219,11 @@ export default function RegistrationPortal({
                     />
                   </label>
                 </div>
-                <h3>Competitions</h3>
-                <div className="grid2">
+                <h3>Programmes</h3>
+                {[{key:"Stage",label:"Stage programmes"},{key:"Off-Stage",label:"Off-stage programmes"}].map(group => <section key={group.key} style={{marginBottom:18}}><h4>{group.label} {!(group.key === "Stage" ? data.stageRegistrationOpen : data.offStageRegistrationOpen) ? "· Registration closed" : "· Registration open"}</h4><div className="grid2">
                   {data.events
-                    .filter((e) => e.zone === form.zone)
+                    .filter((e) => e.zone === form.zone && e.category === group.key)
+                    .filter(() => group.key === "Stage" ? data.stageRegistrationOpen : data.offStageRegistrationOpen)
                     .map((e) => (
                       <label
                         key={e.id}
@@ -230,10 +246,10 @@ export default function RegistrationPortal({
                             })
                           }
                         />
-                        {e.name}
+                        {e.name}{e.type !== "Individual" ? " · Group programme" : " · Individual"}
                       </label>
                     ))}
-                </div>
+                </div></section>)}
                 {!data.events.some((e) => e.zone === form.zone) && (
                   <p>Main admin must add events in this category first.</p>
                 )}
@@ -259,6 +275,7 @@ export default function RegistrationPortal({
                   <th>Chest</th>
                   <th>Name</th>
                   <th>Team / category</th>
+                  <th>Class</th>
                   <th>Competitions</th>
                   <th>Control</th>
                 </tr>
@@ -279,6 +296,7 @@ export default function RegistrationPortal({
                           "Removed team"}{" "}
                         / {labels[p.zone]}
                       </td>
+                      <td>{p.className || "—"}</td>
                       <td>
                         {p.eventIds
                           .map(

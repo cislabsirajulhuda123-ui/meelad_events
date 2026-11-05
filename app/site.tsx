@@ -236,8 +236,33 @@ function Ranking({
   zone?: string;
 }) {
   const rows = standings(data, zone);
+  const publishedEvents = data.events.filter(e => e.published && (zone === "OVERALL" || e.zone === zone)).sort((a,b) => (Number(a.resultNumber)||0)-(Number(b.resultNumber)||0));
+  const graphTeams = rows.slice(0, 5);
+  const graphMax = Math.max(1, ...graphTeams.map(t => t.points));
+  const graphWidth = 760, graphHeight = 220, graphPad = 28;
+  const graphSeries = graphTeams.map(team => {
+    let total = 0;
+    const values = publishedEvents.map(e => {
+      const eventPoints = e.type !== "Individual" ? Math.max(0,...e.publishedResults.filter(r=>r.team===team.name).map(r=>r.points)) : e.publishedResults.filter(r=>r.team===team.name).reduce((n,r)=>n+r.points,0);
+      total += eventPoints;
+      return total;
+    });
+    const points = values.map((v,i)=>`${graphPad+(publishedEvents.length<=1?0:i*(graphWidth-graphPad*2)/(publishedEvents.length-1))},${graphHeight-graphPad-(v/graphMax)*(graphHeight-graphPad*2)}`).join(" ");
+    return {team,points,values};
+  });
+  const gap = Math.max(1, data.settings.leaderboardGap || 5);
   return (
     <>
+      {publishedEvents.length > 1 && graphTeams.length > 0 && <section className="card" style={{marginBottom:24,padding:18}}>
+        <div className="split"><div><h2 style={{margin:0}}>Live points progression</h2><p className="muted">Cumulative points across published results. Each {gap} results form a graph checkpoint.</p></div><span className="eyebrow">TOP {graphTeams.length} TEAMS</span></div>
+        <div style={{overflowX:"auto"}}><svg viewBox={`0 0 ${graphWidth} ${graphHeight+30}`} role="img" aria-label="Animated cumulative team points graph" style={{width:"100%",minWidth:440,overflow:"visible"}}>
+          {[0,0.5,1].map(f=><g key={f}><line x1={graphPad} x2={graphWidth-graphPad} y1={graphHeight-graphPad-f*(graphHeight-graphPad*2)} y2={graphHeight-graphPad-f*(graphHeight-graphPad*2)} stroke="currentColor" opacity=".13" strokeDasharray="4 5"/><text x="3" y={graphHeight-graphPad-f*(graphHeight-graphPad*2)+4} fontSize="10" fill="currentColor">{Math.round(graphMax*f)}</text></g>)}
+          {graphSeries.map((series,i)=><polyline key={series.team.id} points={series.points} fill="none" stroke={`hsl(${(i*67+178)%360} 72% 52%)`} strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" className="leader-line"><title>{series.team.name}</title></polyline>)}
+          {publishedEvents.map((e,i)=>{const x=graphPad+(publishedEvents.length<=1?0:i*(graphWidth-graphPad*2)/(publishedEvents.length-1));return (i===0||((i+1)%gap===0)||i===publishedEvents.length-1)?<g key={e.id}><line x1={x} x2={x} y1={graphHeight-graphPad} y2={graphHeight-graphPad+5} stroke="currentColor"/><text x={x} y={graphHeight+12} textAnchor="middle" fontSize="10" fill="currentColor">{i+1}</text></g>:null;})}
+        </svg></div>
+        <div style={{display:"flex",flexWrap:"wrap",gap:14,marginTop:8}}>{graphSeries.map((s,i)=><span key={s.team.id} style={{fontSize:12,display:"inline-flex",alignItems:"center",gap:6}}><i style={{display:"inline-block",width:9,height:9,borderRadius:9,background:`hsl(${(i*67+178)%360} 72% 52%)`}}/>{s.team.name}</span>)}</div>
+        <style jsx>{`.leader-line{stroke-dasharray:1200;stroke-dashoffset:1200;animation:drawline 1.8s ease forwards}@keyframes drawline{to{stroke-dashoffset:0}}`}</style>
+      </section>}
       <div className="grid3 podium">
         {rows.slice(0, 3).map((r, i) => (
           <article className={"card place-" + (i + 1)} key={r.id}>
@@ -292,6 +317,7 @@ function Ranking({
                 <TableCell className="right aqua">
                   {t.points}
                   <SiteText value={" points"} />
+                  {i > 0 && <small style={{display:"block",opacity:.7}}>Gap: {Math.max(0, rows[i - 1].points - t.points)} points</small>}
                 </TableCell>
               </TableRow>
             ))}

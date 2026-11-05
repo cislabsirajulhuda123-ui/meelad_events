@@ -1,0 +1,1 @@
+import {portalRole} from '@/lib/admin';import {redirect} from 'next/navigation';import ResultController from './ui';export const dynamic='force-dynamic';export default async function Page(){if(!['admin','result'].includes(await portalRole()||''))redirect('/result-controller/login');return <ResultController/>}

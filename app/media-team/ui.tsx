@@ -26,9 +26,9 @@ export default function MediaPortal() {
     try {
       let src = url.trim();
       if (file) {
-        if (file.size > 3 * 1024 * 1024)
+        if (file.size > 10 * 1024 * 1024)
           throw Error(
-            "Large files: use a direct HTTPS media link. You can add unlimited gallery items.",
+            "Files must be 10 MB or smaller. You can also use a direct HTTPS media link.",
           );
         src = await new Promise<string>((resolve, reject) => {
           const reader = new FileReader();
@@ -136,8 +136,7 @@ export default function MediaPortal() {
             />
           </label>
           <p>
-            Large photos or videos: use a direct HTTPS link. Any number of items
-            can be added.
+            Photos and videos up to 10 MB are accepted. For larger files, use a direct HTTPS link.
           </p>
           <button className="btn">
             {busy ? "Working…" : "Add to gallery"}

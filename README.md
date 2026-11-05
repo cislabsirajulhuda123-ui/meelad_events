@@ -47,7 +47,7 @@ No Vercel deployment or database is created by extracting this archive.
 - Main Admin → **Participants**: view and edit registrations. Toggle **Registration Open / Closed**, then **Save changes** to enable or disable Sub-admin entry. Closed registration blocks both additions and edits; Main Admin can still edit.
 - **Events & results → Import registrations** adds registered participants to the
   selected event's result draft. Enter ranks/points and publish the result.
-- Sub-admin cannot edit public content, results, marks, or portal passwords.
+- Sub-admin cannot edit public content, results, marks, or portal passwords. Result Controller, Main Invigilator and Invigilator accounts are configured separately in Portal passwords; Main Admin must enable each role in Site settings.
 
 ## Data
 
@@ -72,4 +72,29 @@ and a local server on port 3097; it does not modify a hosted database.
 
 Event types: Individual, Group 2, Group 3, Group 4, Group 5. Legacy Group events load as Group 2; review their size in Main Admin. All group types count the highest score per team once. High School group posters show 1st/2nd/3rd slots with one participant per winning team on each page, rotating entered members across pages. Unannounced places are labelled; marks and grades are excluded.
 
-Media Team: /media-team (login /media-team/login). Main Admin sets its separate password under Portal passwords. This role can only add gallery photos/videos, never access registrations or edit site content. Upload PNG/JPEG/WebP/GIF or MP4/WebM up to 3 MB; larger videos need a direct HTTPS link. Run npm run db:migrate before deployment to create gallery_media. Media is stored in the configured database and appears on /gallery.
+Result Controller: /result-controller (login /result-controller/login). This role can save result drafts only; Main Admin retains publishing authority. Main Invigilator: /main-invigilator (login /main-invigilator/login) can open/close participation per competition. Invigilator: /invigilator (login /invigilator/login) can mark attendance by chest number only for candidates registered in that event while participation is open. Attendance requires migration `0004_attendance.sql`. Candidate QR codes are available on the candidate detail page and printable roster. Invigilator camera scanning uses the browser BarcodeDetector API where supported; manual chest-number entry remains available as a fallback.
+
+Media Team: /media-team (login /media-team/login). Main Admin sets its separate password under Portal passwords. This role can only add gallery photos/videos, never access registrations or edit site content. Upload PNG/JPEG/WebP/GIF or MP4/WebM up to 10 MB; larger videos need a direct HTTPS link. Run npm run db:migrate before deployment to create gallery_media. Media is stored in the configured database and appears on /gallery.
+
+## Additional portal workflow in this revision
+
+- Main Admin can enable/disable Result Controller, Main Invigilator and Invigilator portals in Site settings and set their separate passwords in Portal passwords.
+- Result Controller saves draft rows only. It can import only attendance-marked candidates; the API rejects any row whose registration has not been marked present for that event. Main Admin remains responsible for publishing/announcing.
+- Main Invigilator can open/close participation per competition. Invigilators can record attendance by chest number only while that event is open and only if the candidate is registered for that event.
+- Run `npm run db:migrate` after deploying this revision to create the `event_attendance` table.
+
+## Remaining items and limitations
+
+Category management is available in Admin → Categories (create, rename and delete custom categories). Team deletion is blocked while registrations or results still reference the team; the server independently validates category and team deletion. The Result Controller and attendance portals are role-separated workflows, not a full enterprise audit/approval system. QR images currently depend on the external QR Server endpoint, and camera scanning is browser-dependent. Stage and Off-stage registration switches are available in Admin → Participants.
+
+## Verification status
+
+Source changes are packaged, but a production build could not be verified in this environment because project dependencies could not be installed from the npm registry. Install dependencies with `npm ci`, run `npm run db:migrate`, then `npm run build` before deploying. Test the portals against a staging database first.
+
+
+### Candidate QR and printable roster
+- Each candidate has a private-by-unguessable-ID detail URL at `/candidate/[id]`, showing their name, class, team, chest number, registered competitions and QR code.
+- Main Admin can open `/admin/roster` to filter candidates by category/team and print or save an A4 PDF roster. The roster contains no marks or results.
+- QR images are currently rendered through the QR Server image endpoint, so the browser needs internet access when displaying/printing QR codes. QR payload contains the candidate UUID and chest number.
+- Camera scanning uses the browser's native `BarcodeDetector` API and requires camera permission plus HTTPS (or localhost). Browsers without this API can use manual chest entry.
+- Main Admin can independently toggle Stage and Off-stage registration in Admin → Participants. The global registration switch remains the master switch for sub-admin access.

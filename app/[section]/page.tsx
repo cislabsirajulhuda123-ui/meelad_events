@@ -23,6 +23,7 @@ export default async function Page({
     notFound();
   try {
     const s = await loadFestival();
+    if (section === "top-scorer" && !s.data.settings.topScorerEnabled) notFound();
     return <FestivalSite initial={publicData(s.data)} view={section} />;
   } catch {
     return (

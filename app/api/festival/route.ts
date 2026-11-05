@@ -1,4 +1,4 @@
-import { loadFestival, publicData, storeFestival } from "@/lib/festival";
+import { db, loadFestival, publicData, storeFestival } from "@/lib/festival";
 import { stateSchema } from "@/lib/model";
 import { isAdmin } from "@/lib/admin";
 export const dynamic = "force-dynamic";
@@ -40,8 +40,18 @@ export async function POST(req: Request) {
         409,
       );
     const data = stateSchema.parse(input.data);
+    const removedTeamIds = current.data.teams.filter(t => !data.teams.some(next => next.id === t.id)).map(t => t.id);
+    const removedCategories = Object.keys(current.data.categoryLabels).filter(key => !data.categoryLabels[key]);
+    if (removedTeamIds.length || removedCategories.length) {
+      const registrations = await db().prepare("SELECT payload FROM registrations").all<{payload:string}>();
+      const candidates = registrations.results.map(r => JSON.parse(r.payload) as {teamId?:string;zone?:string});
+      if (candidates.some(p => removedTeamIds.includes(p.teamId || "")))
+        return reply({error:"A team cannot be deleted while registered candidates still belong to it. Move or delete those registrations first."},409);
+      if (removedCategories.some(key => current.data.events.some(e => e.zone === key) || candidates.some(p => p.zone === key)))
+        return reply({error:"A category cannot be deleted while events or registered candidates still use it. Move them to another category first."},409);
+    }
     const action = input.action;
-    if (!["save", "publish", "unpublish"].includes(action))
+    if (!["save", "publish", "unpublish", "queue", "announce", "directPublish"].includes(action))
       return reply({ error: "Invalid action" }, 400);
     for (const event of data.events) {
       const prev = current.data.events.find((e) => e.id === event.id);
@@ -51,7 +61,25 @@ export async function POST(req: Request) {
         const renamed = data.teams.find((t) => t.id === oldTeam?.id);
         return { ...r, team: renamed?.name ?? r.team };
       });
-      if (event.id === input.eventId && action === "publish") {
+      event.announcementStatus = prev?.announcementStatus ?? (prev?.published ? "announced" : "draft");
+      event.announcementResults = (prev?.announcementResults ?? []).map((r) => {
+        const oldTeam = current.data.teams.find((t) => t.name === r.team);
+        const renamed = data.teams.find((t) => t.id === oldTeam?.id);
+        return { ...r, team: renamed?.name ?? r.team };
+      });
+      if (event.id === input.eventId && action === "queue") {
+        if (!event.results.length) return reply({ error: "Add at least one result before sending it to Announcements." }, 400);
+        event.announcementResults = structuredClone(event.results);
+        event.announcementStatus = "pending";
+      }
+      if (event.id === input.eventId && action === "announce") {
+        if (!event.announcementResults.length) return reply({ error: "No result is waiting in Announcements." }, 400);
+        event.published = true;
+        event.publishedResults = structuredClone(event.announcementResults);
+        event.results = structuredClone(event.announcementResults);
+        event.announcementStatus = "announced";
+      }
+      if (event.id === input.eventId && action === "directPublish") {
         if (!event.results.length)
           return reply(
             { error: "Add at least one result before publishing." },
@@ -66,9 +94,18 @@ export async function POST(req: Request) {
         }
         event.published = true;
         event.publishedResults = structuredClone(event.results);
+        event.announcementResults = structuredClone(event.results);
+        event.announcementStatus = "direct";
       }
-      if (event.id === input.eventId && action === "unpublish")
+      if (event.id === input.eventId && action === "publish") {
+        if (!event.results.length) return reply({ error: "Add at least one result before publishing." }, 400);
+        event.announcementResults = structuredClone(event.results);
+        event.announcementStatus = "pending";
+      }
+      if (event.id === input.eventId && action === "unpublish") {
         event.published = false;
+        event.announcementStatus = "pending";
+      }
     }
     if (action !== "save" && !data.events.some((e) => e.id === input.eventId))
       return reply({ error: "Event not found" }, 404);

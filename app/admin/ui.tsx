@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   AlertDialog,
@@ -45,6 +45,7 @@ export default function Admin({
   initial: Festival;
   initialRevision: number;
 }) {
+  const undoSnapshot = useRef<Festival | null>(null);
   const [data, setData] = useState(initial),
     [revision, setRevision] = useState(initialRevision),
     [selected, setSelected] = useState(initial.events[0]?.id || ""),
@@ -55,8 +56,17 @@ export default function Admin({
     [error, setError] = useState(""),
     [dirty, setDirty] = useState(false),
     [remove, setRemove] = useState<string | null>(null);
+    const [teamCandidateCounts, setTeamCandidateCounts] = useState<Record<string, number>>({});
   const categoryNames = { ...zones, ...data.categoryLabels };
   const event = data.events.find((e) => e.id === selected);
+  useEffect(() => {
+    fetch("/api/registrations", { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => {
+      if (!j?.registrations) return;
+      const counts: Record<string, number> = {};
+      for (const p of j.registrations as {teamId:string}[]) counts[p.teamId] = (counts[p.teamId] || 0) + 1;
+      setTeamCandidateCounts(counts);
+    }).catch(() => {});
+  }, []);
   useEffect(() => {
     const f = (e: BeforeUnloadEvent) => {
       if (dirty) {
@@ -68,7 +78,10 @@ export default function Admin({
     return () => window.removeEventListener("beforeunload", f);
   }, [dirty]);
   function change(fn: (d: Festival) => Festival) {
-    setData(fn);
+    setData((current) => {
+      undoSnapshot.current = current;
+      return fn(current);
+    });
     setDirty(true);
     setMessage("");
   }
@@ -101,20 +114,34 @@ export default function Admin({
       };
       if (!r.ok) throw Error(j.error || "Could not save");
       setData(j.data);
+      undoSnapshot.current = null;
       setRevision(j.revision);
       setDirty(false);
       setMessage(
-        action === "publish"
-          ? "Scorecard published. The public leaderboard is updated."
-          : action === "unpublish"
-            ? "Scorecard unpublished. Results are hidden from the public."
-            : "Changes saved. Result edits stay in draft until you publish.",
+        action === "announce"
+          ? "Announced. The result is now visible on the public website."
+          : action === "directPublish"
+            ? "Published directly to the public website."
+            : action === "queue" || action === "publish"
+              ? "Result sent to Announcements. It stays private until marked Announced."
+              : action === "unpublish"
+                ? "Scorecard unpublished. Results are hidden from the public."
+                : "Changes saved. Result edits stay in draft until you publish.",
       );
     } catch (e) {
       setError((e as Error).message);
     } finally {
       setBusy(false);
     }
+  }
+  async function saveForEvent(eventId: string, action: string) {
+    setBusy(true); setError(""); setMessage("");
+    try {
+      const r = await fetch("/api/festival", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ data, revision, action, eventId }) });
+      const j = await r.json() as { error?: string; data: Festival; revision: number };
+      if (!r.ok) throw Error(j.error || "Could not update announcement");
+      setData(j.data); undoSnapshot.current = null; setRevision(j.revision); setDirty(false); setMessage("Result marked Announced and published publicly.");
+    } catch (e) { setError((e as Error).message); } finally { setBusy(false); }
   }
   async function importParticipants() {
     if (!event) return;
@@ -174,6 +201,9 @@ export default function Admin({
           pinnedTopScorerId: "",
           type: "Individual",
           published: false,
+          participationOpen: false,
+          announcementStatus: "draft",
+          announcementResults: [],
           results: [],
           publishedResults: [],
         },
@@ -245,10 +275,13 @@ export default function Admin({
               Manage all pages, categories, participants, teams and results.
             </p>
           </div>
-          <button className="btn" disabled={busy} onClick={() => save()}>
-            <Save size={17} />
-            {busy ? "Saving…" : dirty ? "Save changes" : "Save"}
-          </button>
+          <div className="button-row">
+            <button className="btn outline" disabled={busy || !undoSnapshot.current} onClick={() => { if (undoSnapshot.current) { setData(undoSnapshot.current); undoSnapshot.current = null; setDirty(true); setMessage("Last edit undone. Save to keep the restored version."); setError(""); } }}>Undo last edit</button>
+            <button className="btn" disabled={busy} onClick={() => save()}>
+              <Save size={17} />
+              {busy ? "Saving…" : dirty ? "Save changes" : "Save"}
+            </button>
+          </div>
         </div>
         <div className="admin-stats">
           <span>
@@ -282,11 +315,13 @@ export default function Admin({
               <TabsTrigger value="home">Home page</TabsTrigger>
               <TabsTrigger value="schedule">Schedule & Live</TabsTrigger>
               <TabsTrigger value="teams">Teams</TabsTrigger>
+              <TabsTrigger value="categories">Categories</TabsTrigger>
               <TabsTrigger value="posters">Poster drafts</TabsTrigger>
               <TabsTrigger value="sharing">Share messages</TabsTrigger>
               <TabsTrigger value="settings">Site settings</TabsTrigger>
               <TabsTrigger value="content">All public pages</TabsTrigger>
               <TabsTrigger value="participants">Participants</TabsTrigger>
+              <TabsTrigger value="announcements">Announcements</TabsTrigger>
             </TabsList>
             <TabsContent value="events">
               <div className="admin-layout">
@@ -429,6 +464,10 @@ export default function Admin({
                               "Group 5": "Group 5",
                             }}
                           />
+                        </label>
+                        <label style={{display:"flex",alignItems:"center",gap:10}}>
+                          <input type="checkbox" style={{width:20}} checked={event.participationOpen} onChange={(e)=>editEvent({participationOpen:e.target.checked})}/>
+                          {event.participationOpen ? "Participation Open" : "Participation Closed"}
                         </label>
                         <div className="field-note">
                           Status:{" "}
@@ -592,33 +631,14 @@ export default function Admin({
                       )}
                       <div className="publish-box">
                         <div>
-                          <h3>
-                            {event.published
-                              ? "Update published scorecard"
-                              : "Publish this event"}
-                          </h3>
-                          <p>
-                            Publishing makes this draft visible to everyone and
-                            recalculates team points.
-                          </p>
+                          <h3>Result publishing workflow</h3>
+                          <p>Send results to Announcements first. They remain private until an admin marks them Announced. Use direct publish only when you want to skip that step.</p>
+                          <p><strong>Status:</strong> {event.announcementStatus === "pending" ? "Waiting in Announcements" : event.announcementStatus === "announced" ? "Announced publicly" : event.announcementStatus === "direct" ? "Published directly" : "Draft"}</p>
                         </div>
                         <div className="button-row">
-                          {event.published && (
-                            <button
-                              className="btn outline"
-                              onClick={() => save("unpublish")}
-                            >
-                              Unpublish
-                            </button>
-                          )}
-                          <button
-                            className="btn"
-                            disabled={!event.results.length}
-                            onClick={() => save("publish")}
-                          >
-                            <Globe size={16} />
-                            Publish results
-                          </button>
+                          {event.published && <button className="btn outline" onClick={() => save("unpublish")}>Unpublish</button>}
+                          <button className="btn outline" disabled={!event.results.length} onClick={() => save("queue")}>Send to Announcements</button>
+                          <button className="btn" disabled={!event.results.length} onClick={() => save("directPublish")}><Globe size={16}/> Direct publish</button>
                         </div>
                       </div>
                     </>
@@ -666,11 +686,13 @@ export default function Admin({
                 </div>
                 <div className="grid3">
                   {data.teams.map((t) => {
-                    const used = data.events.some((e) =>
+                    const usedInResults = data.events.some((e) =>
                       [...e.results, ...e.publishedResults].some(
                         (r) => r.team === t.name,
                       ),
                     );
+                    const candidateCount = teamCandidateCounts[t.id] || 0;
+                    const used = usedInResults || candidateCount > 0;
                     return (
                       <div className="card" key={t.id}>
                         <label>
@@ -721,13 +743,45 @@ export default function Admin({
                         </label>
                         {used && (
                           <small className="muted">
-                            Renaming also updates linked results.
+                            {candidateCount} registered candidate(s). {usedInResults ? "Existing results also use this team. " : ""}Move or remove linked records before deleting. Renaming updates linked results.
                           </small>
                         )}
+                        <button type="button" className="btn outline small danger" disabled={used} onClick={() => change(d => ({...d, teams:d.teams.filter(x=>x.id!==t.id)}))}>Delete team</button>
                       </div>
                     );
                   })}
                 </div>
+              </section>
+            </TabsContent>
+            <TabsContent value="categories">
+              <section className="card admin-section">
+                <div className="split">
+                  <div>
+                    <h2>Category management</h2>
+                    <p>Create and rename festival categories. A category cannot be removed while an event or candidate is assigned to it.</p>
+                  </div>
+                  <button className="btn" onClick={() => {
+                    const label = window.prompt("New category name");
+                    if (!label?.trim()) return;
+                    const clean = label.trim();
+                    const key = "CUSTOM_" + clean.toUpperCase().replace(/[^A-Z0-9]+/g, "_").replace(/^_|_$/g, "").slice(0, 35) + "_" + crypto.randomUUID().slice(0, 6).toUpperCase();
+                    change(d => ({ ...d, categoryLabels: { ...d.categoryLabels, [key]: clean } }));
+                  }}><Plus size={16}/> Add category</button>
+                </div>
+                <div className="grid3">
+                  {Object.entries(data.categoryLabels).map(([key, label]) => {
+                    const inUse = data.events.some(e => e.zone === key);
+                    return <article className="card" key={key}>
+                      <label>Category name<input value={label} maxLength={100} onChange={e => change(d => ({...d, categoryLabels:{...d.categoryLabels,[key]:e.target.value}}))}/></label>
+                      <small className="muted">Code: {key} · {inUse ? "In use by events" : "No events currently assigned"}</small>
+                      <button type="button" className="btn outline small danger" disabled={inUse} onClick={() => {
+                        if (!window.confirm(`Delete category “${label}”? This cannot be undone after saving.`)) return;
+                        change(d => { const next = {...d.categoryLabels}; delete next[key]; return {...d,categoryLabels:next}; });
+                      }}> <Trash2 size={14}/> Delete category</button>
+                    </article>;
+                  })}
+                </div>
+                <p className="muted">Built-in categories remain available. For custom categories, deletion is also checked against candidate registrations by the server before saving.</p>
               </section>
             </TabsContent>
             <TabsContent value="posters">
@@ -737,6 +791,30 @@ export default function Admin({
               <section className="card admin-section">
                 <h2>Site settings</h2>
                 <p>Save changes to update the public website.</p>
+                <div className="form-grid">
+                  <label style={{display:"flex",alignItems:"center",gap:10}}>
+                    <input type="checkbox" style={{width:20}} checked={data.settings.topScorerEnabled} onChange={(e) => change((d) => ({...d, settings:{...d.settings, topScorerEnabled:e.target.checked}}))}/>
+                    Enable Top Scorer page
+                  </label>
+                  <label style={{display:"flex",alignItems:"center",gap:10}}>
+                    <input type="checkbox" style={{width:20}} checked={data.settings.resultControllerEnabled} onChange={(e)=>change((d)=>({...d,settings:{...d.settings,resultControllerEnabled:e.target.checked}}))}/>
+                    Enable Result Controller portal
+                  </label>
+                  <label style={{display:"flex",alignItems:"center",gap:10}}>
+                    <input type="checkbox" style={{width:20}} checked={data.settings.mainInvigilatorEnabled} onChange={(e)=>change((d)=>({...d,settings:{...d.settings,mainInvigilatorEnabled:e.target.checked}}))}/>
+                    Enable Main Invigilator portal
+                  </label>
+                  <label style={{display:"flex",alignItems:"center",gap:10}}>
+                    <input type="checkbox" style={{width:20}} checked={data.settings.invigilatorEnabled} onChange={(e)=>change((d)=>({...d,settings:{...d.settings,invigilatorEnabled:e.target.checked}}))}/>
+                    Enable Invigilator portal
+                  </label>
+                  <label>
+                    Leaderboard point-gap display
+                    <select value={data.settings.leaderboardGap} onChange={(e) => change((d) => ({...d, settings:{...d.settings, leaderboardGap:Number(e.target.value)}}))}>
+                      {[1,3,5,10,15,20].map((n) => <option key={n} value={n}>{n} point gap</option>)}
+                    </select>
+                  </label>
+                </div>
                 <LogoUpload data={data} change={change} />
                 <label style={{ display: "grid", gap: 8, marginBottom: 18 }}>
                   Browser tab name
@@ -792,6 +870,16 @@ export default function Admin({
             <TabsContent value="content">
               <ContentEditor data={data} change={change} />
             </TabsContent>
+            <TabsContent value="announcements">
+              <section className="card admin-section">
+                <h2>Announcements</h2>
+                <p>Queued results and direct-published results appear here. Click “Mark Announced” to confirm the announcement and move the item out of this tab.</p>
+                <div className="table-box"><Table><TableHeader><TableRow><TableHead>Competition</TableHead><TableHead>Category</TableHead><TableHead>Status</TableHead><TableHead>Action</TableHead></TableRow></TableHeader><TableBody>
+                  {data.events.filter(e => e.announcementStatus === "pending" || e.announcementStatus === "direct").map(e => <TableRow key={e.id}><TableCell>{e.name}</TableCell><TableCell>{categoryNames[e.zone] || e.zone}</TableCell><TableCell>{e.announcementStatus === "pending" ? "Waiting for announcement" : e.announcementStatus === "direct" ? "Directly published" : "Announced"}</TableCell><TableCell><div className="button-row">{(e.announcementStatus === "pending" || e.announcementStatus === "direct") && <button className="btn small" onClick={() => { setSelected(e.id); void saveForEvent(e.id, "announce"); }}>Mark Announced</button>}<a className="btn outline small" href={"/results/" + e.id} target="_blank">View</a></div></TableCell></TableRow>)}
+                </TableBody></Table></div>
+                {!data.events.some(e => ["pending", "direct"].includes(e.announcementStatus)) && <p>No results in Announcements yet.</p>}
+              </section>
+            </TabsContent>
             <TabsContent value="participants">
               <section className="card admin-section">
                 <h2>Sub-admin registration access</h2>
@@ -818,6 +906,18 @@ export default function Admin({
                   can view registrations but cannot add or edit participants.
                   Main Admin can still make changes.
                 </p>
+                <div className="form-grid" style={{marginTop:18}}>
+                  <label style={{display:"flex",alignItems:"center",gap:10}}>
+                    <input type="checkbox" style={{width:22}} checked={data.stageRegistrationOpen} onChange={(e)=>change((d)=>({...d,stageRegistrationOpen:e.target.checked}))}/>
+                    Stage programme registration open
+                  </label>
+                  <label style={{display:"flex",alignItems:"center",gap:10}}>
+                    <input type="checkbox" style={{width:22}} checked={data.offStageRegistrationOpen} onChange={(e)=>change((d)=>({...d,offStageRegistrationOpen:e.target.checked}))}/>
+                    Off-stage programme registration open
+                  </label>
+                </div>
+                <p className="muted">These controls work alongside the main registration switch. Main Admin can still register participants while a category is closed.</p>
+                <div style={{marginTop:16}}><a className="btn outline" href="/admin/roster" target="_blank">Open printable candidate roster</a></div>
               </section>
               <RegistrationPortal embedded />
             </TabsContent>

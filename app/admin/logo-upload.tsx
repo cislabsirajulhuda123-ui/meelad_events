@@ -17,8 +17,8 @@ export default function LogoUpload({
 
   async function upload(file?: File) {
     if (!file) return;
-    if (file.size > 3_000_000) {
-      setError("Choose an image under 3 MB.");
+    if (file.size > 10 * 1024 * 1024) {
+      setError("Choose an image 10 MB or smaller.");
       return;
     }
     setBusy(true);

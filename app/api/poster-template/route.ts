@@ -10,9 +10,9 @@ export async function POST(req: Request) {
         { status: 403 },
       );
     const raw = await req.text();
-    if (raw.length > 4200000)
+    if (raw.length > 14000000)
       return Response.json(
-        { error: "Choose an image under 3 MB." },
+        { error: "Choose an image under 10 MB." },
         { status: 413 },
       );
     const body = JSON.parse(raw) as { category?: string; src?: string };

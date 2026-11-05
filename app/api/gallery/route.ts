@@ -25,9 +25,9 @@ export async function POST(req: Request) {
         { status: 403 },
       );
     const raw = await req.text();
-    if (raw.length > 4200000)
+    if (raw.length > 14000000)
       return Response.json(
-        { error: "Use a file under 3 MB, or add an HTTPS media link." },
+        { error: "Use a file under 10 MB, or add an HTTPS media link." },
         { status: 413 },
       );
     const b = JSON.parse(raw);

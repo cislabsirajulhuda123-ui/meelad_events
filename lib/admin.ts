@@ -3,7 +3,7 @@ import {db} from './festival';
 export const SESSION_COOKIE='cognizium_admin';
 export async function digest(value:string){const d=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(value));return Array.from(new Uint8Array(d),x=>x.toString(16).padStart(2,'0')).join('');}
 export function cookieToken(value:string|null){return value?.split(';').map(x=>x.trim()).find(x=>x.startsWith(SESSION_COOKIE+'='))?.slice(SESSION_COOKIE.length+1)||'';}
-export type PortalRole='admin'|'registrar'|'media';
+export type PortalRole='admin'|'registrar'|'media'|'result'|'maininvigilator'|'invigilator';
 export const portalAccount=(role:PortalRole)=>'portal:'+role;
 export async function portalRole():Promise<PortalRole|null>{
  const h=await headers(),token=cookieToken(h.get('cookie'));
@@ -11,6 +11,9 @@ export async function portalRole():Promise<PortalRole|null>{
   const s=await db().prepare('SELECT email,expires_at FROM admin_sessions WHERE token_hash = ?').bind(await digest(token)).first<{email:string,expires_at:number}>();
   if(s&&s.expires_at>Date.now()){
    if(s.email===portalAccount('media'))return 'media';
+   if(s.email===portalAccount('result'))return 'result';
+   if(s.email===portalAccount('maininvigilator'))return 'maininvigilator';
+   if(s.email===portalAccount('invigilator'))return 'invigilator';
    if(s.email===portalAccount('registrar'))return 'registrar';
    if(s.email===portalAccount('admin'))return 'admin';
   }

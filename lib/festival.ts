@@ -54,6 +54,7 @@ export async function loadFestival() {
 export function publicData(d: Festival): Festival {
   return {
     ...d,
+    navigation: d.settings.topScorerEnabled ? d.navigation : d.navigation.filter((n) => n.href !== "/top-scorer"),
     events: d.events.map((e) => ({
       ...e,
       results: e.published ? e.publishedResults : [],

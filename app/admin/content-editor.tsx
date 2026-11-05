@@ -12,6 +12,8 @@ export default function ContentEditor({
 }) {
   const [query, setQuery] = useState("");
   const [group, setGroup] = useState("ALL");
+  const [newCategoryKey, setNewCategoryKey] = useState("");
+  const [newCategoryLabel, setNewCategoryLabel] = useState("");
   const groups = ["ALL", ...Array.from(new Set(catalog.map((c) => c.group)))];
   return (
     <section className="card admin-section">
@@ -139,6 +141,16 @@ export default function ContentEditor({
             />
           </label>
         ))}
+      </div>
+      <div className="card" style={{marginTop:12}}>
+        <h4>Custom categories</h4>
+        <p>Add categories for future events. Delete a custom category only after moving its events to another category.</p>
+        <div className="form-grid">
+          <label>Category key<input value={newCategoryKey} onChange={(e)=>setNewCategoryKey(e.target.value.toUpperCase().replace(/[^A-Z0-9_]/g,"_"))} placeholder="E.G. JUNIOR" maxLength={100}/></label>
+          <label>Display name<input value={newCategoryLabel} onChange={(e)=>setNewCategoryLabel(e.target.value)} placeholder="Junior category" maxLength={100}/></label>
+        </div>
+        <button type="button" className="btn outline" disabled={!newCategoryKey.trim() || !newCategoryLabel.trim() || Boolean(data.categoryLabels[newCategoryKey]) || Boolean(zones[newCategoryKey])} onClick={()=>{change(d=>({...d,categoryLabels:{...d.categoryLabels,[newCategoryKey]:newCategoryLabel.trim()}}));setNewCategoryKey("");setNewCategoryLabel("");}}>Add category</button>
+        <div className="grid3" style={{marginTop:12}}>{Object.entries(data.categoryLabels).filter(([key])=>!zones[key]).map(([key,label])=>{const used=data.events.some(event=>event.zone===key);return <div className="card" key={key}><strong>{label}</strong><small>{key}</small>{used&&<small className="muted">In use by an event. Move the event before deleting.</small>}<button type="button" className="btn outline small danger" disabled={used} onClick={()=>{if(confirm(`Delete category ${label}?`)) change(d=>({...d,categoryLabels:Object.fromEntries(Object.entries(d.categoryLabels).filter(([k])=>k!==key))}));}}>Delete category</button></div>})}</div>
       </div>
       <h3>Page text & images</h3>
       <div className="form-grid">

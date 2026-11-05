@@ -14,17 +14,20 @@ export async function GET() {
     const { data } = await loadFestival();
     return reply({
       registrationOpen: data.registrationOpen,
+      stageRegistrationOpen: data.stageRegistrationOpen,
+      offStageRegistrationOpen: data.offStageRegistrationOpen,
       canEdit: role === "admin" || data.registrationOpen,
       registrations: results.map((r) => ({
         ...JSON.parse(r.payload),
         revision: r.revision,
       })),
       teams: data.teams,
-      events: data.events.map(({ id, name, zone, type }) => ({
+      events: data.events.map(({ id, name, zone, type, category }) => ({
         id,
         name,
         zone,
         type,
+        category,
       })),
       categoryLabels: data.categoryLabels,
     });
@@ -44,6 +47,18 @@ export async function POST(req: Request) {
       return reply({ error: "Invalid revision" }, 400);
     const p = registrationSchema.parse(body.registration),
       { data } = await loadFestival();
+    // Assign a stable chest number when a participant is first created.
+    if (!p.chest) {
+      const team = data.teams.find((t) => t.id === p.teamId);
+      if (!team) return reply({ error: "Choose a valid team." }, 400);
+      const prefix = (team.name.trim()[0] || "X").toUpperCase().replace(/[^A-Z]/g, "X");
+      const existing = await db().prepare("SELECT chest FROM registrations").all<{ chest: string }>();
+      const used = new Set(existing.results.map((x) => x.chest.toUpperCase()));
+      let serial = 1;
+      while (serial <= 9999 && used.has(`${prefix}${String(serial).padStart(4, "0")}`)) serial++;
+      if (serial > 9999) return reply({ error: `Chest numbers for team ${team.name} are full.` }, 409);
+      p.chest = `${prefix}${String(serial).padStart(4, "0")}`;
+    }
     if (role !== "admin" && !data.registrationOpen)
       return reply(
         { error: "Registration is closed. Contact the main admin." },
@@ -51,12 +66,13 @@ export async function POST(req: Request) {
       );
     if (
       !data.teams.some((t) => t.id === p.teamId) ||
-      !p.eventIds.every((id) =>
-        data.events.some((e) => e.id === id && e.zone === p.zone),
-      )
+      !p.eventIds.every((id) => {
+        const event = data.events.find((e) => e.id === id && e.zone === p.zone);
+        return !!event && (role === "admin" || (event.category === "Stage" ? data.stageRegistrationOpen : data.offStageRegistrationOpen));
+      })
     )
       return reply(
-        { error: "Choose a valid team and events in the selected category." },
+        { error: "Choose a valid team and events in an open registration category." },
         400,
       );
     p.eventIds = [...new Set(p.eventIds)];

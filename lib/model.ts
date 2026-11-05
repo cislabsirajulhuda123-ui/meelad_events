@@ -41,14 +41,7 @@ const event = z.object({
   id: text.min(1),
   name: text.min(1),
   category: z.enum(["Stage", "Off-Stage"]),
-  zone: z.enum([
-    "HI_ZONE_CAMPUS",
-    "HI_ZONE_INTER",
-    "D_ZONE",
-    "P_ZONE",
-    "KIDS",
-    "GENERAL",
-  ]),
+  zone: z.string().trim().min(1).max(100),
   venue: text,
   resultNumber: z.string().trim().max(30).default(""),
   scheduleAt: z.string().max(40).default(""),
@@ -61,12 +54,17 @@ const event = z.object({
     z.enum(["Individual", "Group 2", "Group 3", "Group 4", "Group 5"]),
   ),
   published: z.boolean(),
+  participationOpen: z.boolean().default(false),
+  announcementStatus: z.enum(["draft", "pending", "announced", "direct"]).default("draft"),
+  announcementResults: z.array(row).max(2000).default([]),
   results: z.array(row).max(2000),
   publishedResults: z.array(row).max(2000),
 });
 export const stateSchema = z
   .object({
     registrationOpen: z.boolean().default(true),
+    stageRegistrationOpen: z.boolean().default(true),
+    offStageRegistrationOpen: z.boolean().default(true),
     navigation: z.array(navigationItem).max(20).default(defaultNavigation),
     content: z
       .record(z.string().max(10000))
@@ -84,6 +82,11 @@ export const stateSchema = z
       ),
     categoryLabels: z.record(z.string().trim().min(1).max(100)).default({}),
     settings: z.object({
+      topScorerEnabled: z.boolean().default(true),
+      resultControllerEnabled: z.boolean().default(false),
+      invigilatorEnabled: z.boolean().default(false),
+      mainInvigilatorEnabled: z.boolean().default(false),
+      leaderboardGap: z.number().int().min(1).max(20).default(5),
       name: text.min(1),
       subtitle: text.min(1),
       theme: text.min(1),

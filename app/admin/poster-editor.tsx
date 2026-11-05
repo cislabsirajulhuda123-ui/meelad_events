@@ -15,8 +15,8 @@ export default function PosterEditor({
   async function upload(category: string, file?: File) {
     if (!file) return;
     setError("");
-    if (file.size > 3_000_000) {
-      setError("Choose an image under 3 MB.");
+    if (file.size > 10 * 1024 * 1024) {
+      setError("Choose an image under 10 MB.");
       return;
     }
     setBusy(category);
@@ -49,7 +49,7 @@ export default function PosterEditor({
       <h2>Result poster drafts</h2>
       <p>
         Upload a separate blank poster design for each category. Use a 1080 ×
-        1080 PNG, JPG or WEBP under 3 MB. After upload, press{" "}
+        1080 PNG, JPG or WEBP under 10 MB. After upload, press{" "}
         <strong>Save changes</strong>.
       </p>
       {error && (

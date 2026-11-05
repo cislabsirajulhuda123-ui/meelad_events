@@ -3,7 +3,7 @@ import {db} from '@/lib/festival';
 export async function POST(req:Request){try{
  if(!validOrigin(req))return Response.json({error:'Invalid request'},{status:403});
  const raw=await req.text();if(raw.length>10000)return Response.json({error:'Request too large'},{status:413});
- const body=JSON.parse(raw);if(!['admin','registrar','media'].includes(body.role)||typeof body.password!=='string'||body.password.length>128)return Response.json({error:'Invalid password.'},{status:400});
+ const body=JSON.parse(raw);if(!['admin','registrar','media','result','maininvigilator','invigilator'].includes(body.role)||typeof body.password!=='string'||body.password.length>128)return Response.json({error:'Invalid password.'},{status:400});
  const email=portalAccount(body.role),key=await digest(email),now=Date.now();
  const previous=await db().prepare('SELECT count,reset_at FROM login_attempts WHERE key = ?').bind(key).first<{count:number,reset_at:number}>();
  const count=!previous||previous.reset_at<now?1:previous.count+1;

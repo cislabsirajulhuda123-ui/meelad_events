@@ -1,0 +1,1 @@
+import AuthForm from '@/app/admin/auth-form';export default function Page(){return <main className="auth-page"><div className="card"><h1>Main Invigilator</h1><AuthForm role="maininvigilator"/></div><a href="/">Public website</a></main>}
