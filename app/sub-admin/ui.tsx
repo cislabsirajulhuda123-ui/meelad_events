@@ -1,8 +1,11 @@
+
 "use client";
+
 import { useEffect, useState } from "react";
 import type { Registration } from "@/lib/registration";
 import { zones } from "@/lib/model";
 import { Choice } from "../ui";
+
 type Options = {
   registrationOpen: boolean;
   stageRegistrationOpen: boolean;
@@ -10,43 +13,60 @@ type Options = {
   canEdit: boolean;
   registrations: Registration[];
   teams: { id: string; name: string }[];
-  events: { id: string; name: string; zone: string; category?: "Stage" | "Off-Stage" }[];
+  events: {
+    id: string;
+    name: string;
+    zone: string;
+    category?: "Stage" | "Off-Stage";
+    type?: string;
+  }[];
   categoryLabels: Record<string, string>;
 };
+
 export default function RegistrationPortal({
   embedded = false,
 }: {
   embedded?: boolean;
 }) {
-  const [data, setData] = useState<Options | null>(null),
-    [form, setForm] = useState<Registration | null>(null),
-    [query, setQuery] = useState(""),
-    [error, setError] = useState(""),
-    [message, setMessage] = useState(""),
-    [busy, setBusy] = useState(false);
+  const [data, setData] = useState<Options | null>(null);
+  const [form, setForm] = useState<Registration | null>(null);
+  const [query, setQuery] = useState("");
+  const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
+  const [busy, setBusy] = useState(false);
+
   async function load() {
     try {
-      const r = await fetch("/api/registrations", { cache: "no-store" }),
-        j = (await r.json()) as Options & { error?: string };
+      const r = await fetch("/api/registrations", {
+        cache: "no-store",
+      });
+      const j = (await r.json()) as Options & { error?: string };
+
       if (!r.ok) throw Error(j.error || "Request failed");
+
       setData(j);
       setError("");
     } catch (e) {
       setError((e as Error).message);
     }
   }
+
   useEffect(() => {
     void load();
+
     const update = () => {
       if (!document.hidden) void load();
     };
+
     const timer = setInterval(update, 10000);
     window.addEventListener("focus", update);
+
     return () => {
       clearInterval(timer);
       window.removeEventListener("focus", update);
     };
   }, []);
+
   function add() {
     setForm({
       id: crypto.randomUUID(),
@@ -60,24 +80,32 @@ export default function RegistrationPortal({
     });
     setMessage("");
   }
+
   async function save(e: React.FormEvent) {
     e.preventDefault();
     if (!form) return;
+
     setBusy(true);
     setError("");
+
     try {
       const { revision, ...registration } = form;
+
       const r = await fetch("/api/registrations", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ registration, revision }),
-        }),
-        j = (await r.json()) as Options & { error?: string };
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ registration, revision }),
+      });
+
+      const j = (await r.json()) as Options & { error?: string };
+
       if (!r.ok) throw Error(j.error || "Request failed");
+
       setForm(null);
       setMessage(
-        "Participant registered. Results and points are managed by the main admin.",
+        "Participant registered. Results and points are managed by the main admin."
       );
+
       await load();
     } catch (e) {
       setError((e as Error).message);
@@ -85,20 +113,27 @@ export default function RegistrationPortal({
       setBusy(false);
     }
   }
+
   async function remove(id: string, name: string) {
     if (!confirm("Delete " + name + "?")) return;
+
     setBusy(true);
     setError("");
+
     try {
       const r = await fetch("/api/registrations", {
-          method: "DELETE",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id }),
-        }),
-        j = await r.json();
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+
+      const j = await r.json();
+
       if (!r.ok) throw Error(j.error || "Request failed");
+
       setForm(null);
       setMessage("Participant deleted.");
+
       await load();
     } catch (e) {
       setError((e as Error).message);
@@ -106,7 +141,9 @@ export default function RegistrationPortal({
       setBusy(false);
     }
   }
+
   const labels = { ...zones, ...data?.categoryLabels };
+
   return (
     <section className={embedded ? "admin-section" : "container page"}>
       {!embedded && (
@@ -120,16 +157,19 @@ export default function RegistrationPortal({
           <p>Register participants and select their competitions.</p>
         </>
       )}
+
       {error && (
         <p role="alert" className="error">
           {error} <button onClick={load}>Reload</button>
         </p>
       )}
+
       {message && (
         <p role="status" className="success">
           {message}
         </p>
       )}
+
       {data && (
         <>
           <p
@@ -143,6 +183,7 @@ export default function RegistrationPortal({
               ? " — Main Admin can still edit."
               : ""}
           </p>
+
           <div className="split">
             <input
               aria-label="Search registrations"
@@ -150,13 +191,22 @@ export default function RegistrationPortal({
               value={query}
               onChange={(e) => setQuery(e.target.value)}
             />
-            <button className="btn" disabled={!data.canEdit} onClick={add}>
+
+            <button
+              className="btn"
+              disabled={!data.canEdit}
+              onClick={add}
+            >
               Register participant
             </button>
           </div>
+
           {form && (
             <form className="card" onSubmit={save}>
-              <h2>{form.revision ? "Edit participant" : "New participant"}</h2>
+              <h2>
+                {form.revision ? "Edit participant" : "New participant"}
+              </h2>
+
               <fieldset
                 disabled={busy || !data.canEdit}
                 className="admin-fieldset"
@@ -173,17 +223,22 @@ export default function RegistrationPortal({
                       }
                     />
                   </label>
+
                   <label>
                     Class / identification
                     <input
                       maxLength={100}
                       value={form.className || ""}
                       onChange={(e) =>
-                        setForm({ ...form, className: e.target.value })
+                        setForm({
+                          ...form,
+                          className: e.target.value,
+                        })
                       }
                       placeholder="e.g. Class 8 A"
                     />
                   </label>
+
                   <label>
                     Chest number
                     <input
@@ -194,69 +249,128 @@ export default function RegistrationPortal({
                       placeholder="Generated when saved"
                       aria-describedby="chest-help"
                     />
-                    <small id="chest-help">Automatically assigned by the system.</small>
+                    <small id="chest-help">
+                      Automatically assigned by the system.
+                    </small>
                   </label>
+
                   <label>
                     Team
                     <Choice
                       label="Participant team"
                       value={form.teamId}
-                      onChange={(v) => setForm({ ...form, teamId: v, chest: form.revision ? form.chest : "" })}
+                      onChange={(v) =>
+                        setForm({
+                          ...form,
+                          teamId: v,
+                          chest: form.revision ? form.chest : "",
+                        })
+                      }
                       items={Object.fromEntries(
-                        data.teams.map((t) => [t.id, t.name]),
+                        data.teams.map((t) => [t.id, t.name])
                       )}
                     />
                   </label>
+
                   <label>
                     Category
                     <Choice
                       label="Participant category"
                       value={form.zone}
                       onChange={(v) =>
-                        setForm({ ...form, zone: v, eventIds: [] })
+                        setForm({
+                          ...form,
+                          zone: v,
+                          eventIds: [],
+                        })
                       }
                       items={labels}
                     />
                   </label>
                 </div>
+
                 <h3>Programmes</h3>
-                {[{key:"Stage",label:"Stage programmes"},{key:"Off-Stage",label:"Off-stage programmes"}].map(group => <section key={group.key} style={{marginBottom:18}}><h4>{group.label} {!(group.key === "Stage" ? data.stageRegistrationOpen : data.offStageRegistrationOpen) ? "· Registration closed" : "· Registration open"}</h4><div className="grid2">
-                  {data.events
-                    .filter((e) => e.zone === form.zone && e.category === group.key)
-                    .filter(() => group.key === "Stage" ? data.stageRegistrationOpen : data.offStageRegistrationOpen)
-                    .map((e) => (
-                      <label
-                        key={e.id}
-                        style={{
-                          display: "flex",
-                          gap: 12,
-                          alignItems: "center",
-                        }}
-                      >
-                        <input
-                          type="checkbox"
-                          style={{ width: 20 }}
-                          checked={form.eventIds.includes(e.id)}
-                          onChange={(x) =>
-                            setForm({
-                              ...form,
-                              eventIds: x.target.checked
-                                ? [...form.eventIds, e.id]
-                                : form.eventIds.filter((id) => id !== e.id),
-                            })
-                          }
-                        />
-                        {e.name}{e.type !== "Individual" ? " · Group programme" : " · Individual"}
-                      </label>
-                    ))}
-                </div></section>)}
+
+                {[
+                  { key: "Stage", label: "Stage programmes" },
+                  { key: "Off-Stage", label: "Off-stage programmes" },
+                ].map((group) => (
+                  <section
+                    key={group.key}
+                    style={{ marginBottom: 18 }}
+                  >
+                    <h4>
+                      {group.label}{" "}
+                      {!(
+                        group.key === "Stage"
+                          ? data.stageRegistrationOpen
+                          : data.offStageRegistrationOpen
+                      )
+                        ? "· Registration closed"
+                        : "· Registration open"}
+                    </h4>
+
+                    <div className="grid2">
+                      {data.events
+                        .filter(
+                          (e) =>
+                            e.zone === form.zone &&
+                            e.category === group.key
+                        )
+                        .filter(() =>
+                          group.key === "Stage"
+                            ? data.stageRegistrationOpen
+                            : data.offStageRegistrationOpen
+                        )
+                        .map((e) => (
+                          <label
+                            key={e.id}
+                            style={{
+                              display: "flex",
+                              gap: 12,
+                              alignItems: "center",
+                            }}
+                          >
+                            <input
+                              type="checkbox"
+                              style={{ width: 20 }}
+                              checked={form.eventIds.includes(e.id)}
+                              onChange={(x) =>
+                                setForm({
+                                  ...form,
+                                  eventIds: x.target.checked
+                                    ? [...form.eventIds, e.id]
+                                    : form.eventIds.filter(
+                                        (id) => id !== e.id
+                                      ),
+                                })
+                              }
+                            />
+
+                            {e.name}
+                            {e.type !== "Individual"
+                              ? " · Group programme"
+                              : " · Individual"}
+                          </label>
+                        ))}
+                    </div>
+                  </section>
+                ))}
+
                 {!data.events.some((e) => e.zone === form.zone) && (
-                  <p>Main admin must add events in this category first.</p>
+                  <p>
+                    Main admin must add events in this category first.
+                  </p>
                 )}
+
                 <div className="button-row" style={{ marginTop: 20 }}>
-                  <button className="btn" disabled={!form.eventIds.length}>
+                  <button
+                    className="btn"
+                    disabled={!form.eventIds.length}
+                  >
                     {busy ? "Saving…" : "Save registration"}
                   </button>
+
                   <button
                     type="button"
                     className="btn outline"
@@ -268,6 +382,7 @@ export default function RegistrationPortal({
               </fieldset>
             </form>
           )}
+
           <div className="table-box" style={{ marginTop: 20 }}>
             <table style={{ width: "100%" }}>
               <thead>
@@ -280,32 +395,37 @@ export default function RegistrationPortal({
                   <th>Control</th>
                 </tr>
               </thead>
+
               <tbody>
                 {data.registrations
                   .filter((p) =>
                     (p.name + " " + p.chest)
                       .toLowerCase()
-                      .includes(query.toLowerCase()),
+                      .includes(query.toLowerCase())
                   )
                   .map((p) => (
                     <tr key={p.id}>
                       <td>{p.chest}</td>
                       <td>{p.name}</td>
+
                       <td>
                         {data.teams.find((t) => t.id === p.teamId)?.name ||
                           "Removed team"}{" "}
                         / {labels[p.zone]}
                       </td>
+
                       <td>{p.className || "—"}</td>
+
                       <td>
                         {p.eventIds
                           .map(
                             (id) =>
                               data.events.find((e) => e.id === id)?.name ||
-                              "Removed event",
+                              "Removed event"
                           )
                           .join(", ")}
                       </td>
+
                       <td>
                         <div className="button-row">
                           <button
@@ -318,6 +438,7 @@ export default function RegistrationPortal({
                           >
                             Edit
                           </button>
+
                           <button
                             className="btn outline small danger"
                             disabled={!data.canEdit || busy}
@@ -332,9 +453,13 @@ export default function RegistrationPortal({
               </tbody>
             </table>
           </div>
-          {!data.registrations.length && <p>No participants registered yet.</p>}
+
+          {!data.registrations.length && (
+            <p>No participants registered yet.</p>
+          )}
         </>
       )}
     </section>
   );
 }
+
